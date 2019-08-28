@@ -17,7 +17,7 @@ prior.beta <- function(b, sigma = sqrt(1/.001), log = TRUE) {
 fit.inla <- function(data,b){
   data$oset = b$beta_1 * data$x1 +b$beta_2*data$x2
   res = inla(y ~1+offset(oset), data = data)
-  return(list(mlik = res$mlik[1,1], model = res))
+  return(list(mlik = res$mlik[[1]], alfa = res$marginals.fixed[[1]], tau = res$marginals.hyperpar[[1]]))
 }
 
 
@@ -34,34 +34,56 @@ sample.data.bi.linreg <- function(){
 bi.linreg.mcmc.w.inla <- function(df){
   N = 10000
   burnin = 500
-  beta = data.frame(beta_1 = 0, beta_2 = 0)
+  beta = data.frame(beta_1 = rep(NA,N),beta_2 = rep(NA,N),is_burnin = c(rep(T,burnin),rep(F,N-burnin)))
+  beta[1,-3] = c(0,0)
   mlik.y1 = fit.inla(df,beta[1,])
+  first = T
+  browser()
   pb <- txtProgressBar(min = 0, max = N, style = 3)
+  acc.prob = c()
   for (i in seq(2, N)){
     setTxtProgressBar(pb, i)
-    beta[i,] = draw.prop.beta(beta[i-1,])
+    beta[i,-3] = draw.prop.beta(beta[i-1,])
     mlik.y2 = fit.inla(df,beta[i,])
-    acc.prob = mlik.y2$mlik + prior.beta(beta[i,]) +
+    acc.prob = c(acc.prob,mlik.y2$mlik + prior.beta(beta[i,]) +
       prob.prop.beta(beta[i-1,],beta[i,]) - mlik.y1$mlik -
-      prior.beta(beta[i-1,]) - prob.prop.beta(beta[i,], beta[i-1,])
-    if (log(runif(1))>=acc.prob){
-      beta[i,] = beta[i-1,]
+      prior.beta(beta[i-1,]) - prob.prop.beta(beta[i,], beta[i-1,]))
+    if (log(runif(1))>=acc.prob[i-1]){
+      beta[i,-3] = beta[i-1,-3]
+      if (i>burnin){
+        browser()
+        if(first){
+          alfa = mlik.y1$alfa
+          tau = mlik.y1$tau 
+          first = F
+        }else{
+          alfa = alfa + mlik.y1$alfa
+          tau = tau + mlik.y1$tau
+        }
+      }
+      
     }else{
+      if (i>burnin){
+        browser()
+        if(first){
+          alfa = mlik.y2$alfa
+          tau = mlik.y2$tau 
+          first = F
+        }else{
+          alfa = alfa + mlik.y2$alfa
+          tau = tau + mlik.y2$tau
+        }
+      }
       mlik.y1 = mlik.y2
     }
   }
-  return(beta)
+  return(list(beta = beta, alfa = alfa/(N-burnin), tau = tau/(N-burnin), acc.prob))
 }
 
 
 set.seed(123)
 df = sample.data.bi.linreg()
-beta = bi.linreg.mcmc.w.inla(df)
-ggplot(beta,aes(x = seq(1,nrow(beta)))) + 
-  geom_line(aes(y = beta_1, color = "beta_1"))+ 
-  geom_line(aes(y = beta_2, color = "beta_2"))
+mod = bi.linreg.mcmc.w.inla(df)
 
-beta2 = beta[seq(500,nrow(beta),10),]
 
-ggplot(beta2,aes(x = beta_2)) + 
-  geom_density()
+
