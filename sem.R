@@ -89,3 +89,4 @@ sem.mcmc.w.inla <- function(data){
 
 mod <- sem.mcmc.w.inla(columbus)
 save(mod, file = "sem-mcmc-w-inla.Rdata")
+
