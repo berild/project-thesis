@@ -55,8 +55,7 @@ rq.beta <- function(x, sigma = stdev.samp) {
 }
 
 lasso.mcmc.w.inla <- function(data, n.beta){
-  browser()
-  N = 10000
+  N = 100000
   burnin = 500
   beta = matrix(data = NA,nrow = N, ncol = n.beta)
   beta[1,] = rep(0,n.beta)
@@ -84,31 +83,34 @@ lasso.mcmc.w.inla <- function(data, n.beta){
       tau = tau + mod2$tau 
     }
   }
-  return(list(beta = beta, tau = tau/(N-burnin)))
+  return(list(beta = beta, 
+              tau = tau/(N-burnin),
+              acc.prob = min(exp(acc.prob),1)))
 }
 
 set.seed(123)
 mod = lasso.mcmc.w.inla(d, n.beta)
 
-ggplot(as.data.frame(mod$tau),aes(x = x, y = y)) + 
-  geom_line()
-as.data.frame(mod$beta)
-cbind(data.frame(step = seq(1,nrow(mod$beta))),as.data.frame(mod$beta))
-ggplot(cbind(data.frame(step = seq(1,nrow(mod$beta))),as.data.frame(mod$beta))) + 
-  geom_line(aes(x = step, y = V2, color = "beta_1")) + 
-  labs(color = "")
+# 
+# ggplot(as.data.frame(mod$tau),aes(x = x, y = y)) + 
+#   geom_line()
+# as.data.frame(mod$beta)
+# cbind(data.frame(step = seq(1,nrow(mod$beta))),as.data.frame(mod$beta))
+# ggplot(cbind(data.frame(step = seq(1,nrow(mod$beta))),as.data.frame(mod$beta))) + 
+#   geom_line(aes(x = step, y = V2, color = "beta_1")) + 
+#   labs(color = "")
+# 
+# beta = as.data.frame(mod$beta)
+# colnames(beta) = c("beta_1","beta_2","beta_3","beta_4","beta_5")
+# params = colnames(beta)
+# beta2 = beta[-seq(500),]
+# ggplot(beta2,aes(x = beta_3)) + 
+#   geom_density(fill = "deepskyblue", alpha = 0.5)
+# 
+# beta %>%
+#   gather(key,value, params) %>%
+#   ggplot(aes(x = value)) + 
+#   geom_density(fill = "deepskyblue" , alpha = 0.5) + 
+#   facet_wrap(vars(key),scales="free",ncol = 1)
 
-beta = as.data.frame(mod$beta)
-colnames(beta) = c("beta_1","beta_2","beta_3","beta_4","beta_5")
-params = colnames(beta)
-beta2 = beta[-seq(500),]
-ggplot(beta2,aes(x = beta_3)) + 
-  geom_density(fill = "deepskyblue", alpha = 0.5)
-
-beta %>%
-  gather(key,value, params) %>%
-  ggplot(aes(x = value)) + 
-  geom_density(fill = "deepskyblue" , alpha = 0.5) + 
-  facet_wrap(vars(key),scales="free",ncol = 1)
-
-save(mod, file = "lasso-mcmc-w-inla.Rdata")
+save(mod, file = "lasso-mcmc-w-inla2.Rdata")

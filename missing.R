@@ -14,75 +14,67 @@ fit.inla <- function(data, x.mis) {
   
   res <- inla(chl ~ 1 + bmi + age, data = data)
   
-  return(list(mlik = res$mlik[1,1], model = res))
+  return(list(mlik = res$mlik[[1]], alfa = res$marginals.fixed[[1]], beta = res$marginals.fixed[[2]], tau = res$marginals.hyperpar[[1]]))
 }
 
 
 
-dq.beta <- function(x, y, sigma = sqrt(10), log =TRUE) {
-  res <- dnorm(y, mean = x, sd = sigma, log = log)
-  
-  if(log) {
-    return(sum(res))
-  } else {
-    return(prod(res))
-  }
-  
-  
+dq.x.mis <- function(x, y, sigma = sqrt(10), log =TRUE) {
+  sum(dnorm(y, mean = x, sd = sigma, log = log))
 }
 
-rq.beta <- function(x, sigma = sqrt(10) ) {
+rq.x.mis <- function(x, sigma = sqrt(10) ) {
   rnorm(length(x), mean = x, sd = sigma)
 }
 
 
-prior.beta <- function(x, mu = mean(d.mis$bmi, na.rm = TRUE), 
+prior.x.mis <- function(x, mu = mean(d.mis$bmi, na.rm = TRUE), 
                        sigma = 2*sd(d.mis$bmi, na.rm = TRUE), log = TRUE) {
-  res <- dnorm(x, mean = mu, sd= sigma, log = log)
-  
-  if(log) {
-    return(sum(res))
-  } else {
-    return(prod(res))
-  }
+  sum(dnorm(x, mean = mu, sd= sigma, log = log))
 }
 
-inlamh.res <- INLAMH(d.mis, fit.inla, rep(mean(d.mis$bmi, na.rm = TRUE), n.mis),
-                     rq.beta, dq.beta, prior.beta, 
-                     n.sim = 10000, n.burnin = 500, n.thin = 10)
-
-inlamh.res <- INLAMH(d, fit.inla, rep(0, n.beta), rq.beta, dq.beta, prior.beta,
-                     n.sim = 10000, n.burnin = 500, n.thin = 10, verbose = TRUE)
-
 missing.mcmc.w.inla <- function(data, n.mis){
-  browser()
-  N = 1000
+  N = 100000
   burnin = 500
-  beta = matrix(data = NA,nrow = N, ncol = n.mis)
-  beta[1,] = rep(data$bmi,n.mis)
-  mod1 = fit.inla(data, beta[1,])
+  x.mis = matrix(data = NA,nrow = N, ncol = n.mis)
+  x.mis[1,] = rep(mean(data$bmi,na.rm = TRUE),n.mis)
+  mod1 = fit.inla(data,x.mis[1,])
+  alfa = mod1$alfa * 0
+  beta = mod1$beta * 0 
   tau = mod1$tau * 0
   pb <- txtProgressBar(min = 0, max = N, style = 3)
   acc.prob = c()
   for (i in seq(2,N)){
     setTxtProgressBar(pb, i)
-    beta[i,] = rq.beta(beta[i-1,])
-    mod2 = fit.inla(data,beta[i,])
+    x.mis[i,] = rq.x.mis(x.mis[i-1,])
+    mod2 = fit.inla(data,x.mis[i,])
     acc.prob = c(acc.prob,
                  mod2$mlik + 
-                   prior.beta(beta[i,]) +
-                   dq.beta(beta[i,],beta[i-1,]) - 
+                   prior.x.mis(x.mis[i,]) +
+                   dq.x.mis(x.mis[i,],x.mis[i-1,]) - 
                    mod1$mlik -
-                   prior.beta(beta[i-1,]) - 
-                   dq.beta(beta[i-1,], beta[i,]))
+                   prior.x.mis(x.mis[i-1,]) - 
+                   dq.x.mis(x.mis[i-1,], x.mis[i,]))
     if (log(runif(1))>acc.prob[i-1]){
-      beta[i,] = beta[i-1,]
+      x.mis[i,] = x.mis[i-1,]
       if (i >burnin){
+        alfa = alfa +  mod1$alfa
+        beta = beta + mod1$beta
         tau = tau + mod1$tau 
       }
     }else if (i > burnin){
+      alfa = alfa +  mod2$alfa
+      beta = beta + mod2$beta
       tau = tau + mod2$tau 
     }
   }
-  return(list(beta = beta, tau = tau/(N-burnin)))
+  return(list(x.mis = x.mis, 
+              alfa = alfa/(N-burnin), 
+              beta = beta/(N-burnin), 
+              tau = tau/(N-burnin),
+              acc.prob = min(exp(acc.prob),1)))
 }
+
+mod <- missing.mcmc.w.inla(d.mis, n.mis)
+
+save(mod, file = "missing-mcmc-w-inla.Rdata")
