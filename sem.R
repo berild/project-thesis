@@ -84,7 +84,7 @@ sem.mcmc.w.inla <- function(data){
               INC = INC/(N-burnin), 
               HOVAL = HOVAL/(N-burnin),
               tau = tau/(N-burnin),
-              acc.prob = min(exp(acc.prob),1)))
+              acc.prob = sapply(exp(acc.prob),min,1)))
 }
 
 mod <- sem.mcmc.w.inla(columbus)

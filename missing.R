@@ -14,7 +14,10 @@ fit.inla <- function(data, x.mis) {
   
   res <- inla(chl ~ 1 + bmi + age, data = data)
   
-  return(list(mlik = res$mlik[[1]], alfa = res$marginals.fixed[[1]], beta = res$marginals.fixed[[2]], tau = res$marginals.hyperpar[[1]]))
+  return(list(mlik = res$mlik[[1]], 
+              alfa = res$marginals.fixed[[1]], 
+              beta = res$marginals.fixed[[2]], 
+              tau = res$marginals.hyperpar[[1]]))
 }
 
 
@@ -34,7 +37,7 @@ prior.x.mis <- function(x, mu = mean(d.mis$bmi, na.rm = TRUE),
 }
 
 missing.mcmc.w.inla <- function(data, n.mis){
-  N = 100000
+  N = 10000
   burnin = 500
   x.mis = matrix(data = NA,nrow = N, ncol = n.mis)
   x.mis[1,] = rep(mean(data$bmi,na.rm = TRUE),n.mis)
@@ -72,7 +75,7 @@ missing.mcmc.w.inla <- function(data, n.mis){
               alfa = alfa/(N-burnin), 
               beta = beta/(N-burnin), 
               tau = tau/(N-burnin),
-              acc.prob = min(exp(acc.prob),1)))
+              acc.prob = sapply(exp(acc.prob),min,1)))
 }
 
 mod <- missing.mcmc.w.inla(d.mis, n.mis)
