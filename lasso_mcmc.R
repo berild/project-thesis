@@ -1,4 +1,3 @@
-library(INLA)
 library(tidyverse)
 library(ISLR)
 library(glmnet)
@@ -6,13 +5,6 @@ library(smoothmest)#Laplace distribution
 library(mvtnorm)
 
 
-
-fit.inla <- function(data, b) {
-  data$oset <- data$x %*% matrix(b, ncol = 1)
-  res <- inla(y ~ -1 + offset(oset), data = data)
-  res <- inla.rerun(res)
-  return(list(mlik = res$mlik[[1]], alfa = res$marginals.fixed[[1]], tau = res$marginals.hyperpar[[1]]))
-}
 
 prior.beta <- function(x, mu = 0, lambda = 0.073, log = TRUE) {
   res <- sum(log(ddoublex(x, mu = mu, lambda = lambda)))
@@ -36,7 +28,6 @@ y <- scale(y)
 x <- scale(x)
 d <- list(y = y, x = x)
 n.beta <- ncol(d$x)
-summary( fit.inla(d, b = rep(0, n.beta))$model )
 
 
 x1 <-cbind(1,x)
@@ -54,41 +45,42 @@ rq.beta <- function(x, sigma = stdev.samp) {
   as.vector(rmvnorm(1, mean = x, sigma = sigma))
 }
 
-lasso.mcmc.w.inla <- function(data, n.beta){
+r.tau <- function(data, beta){
+  shape = 1.5
+  scale = 1/(1/(5*10^(-5)) + t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta))
+  rgamma(1, shape = shape, scale = scale)
+}
+
+d.y <- function(data,beta,tau,log = TRUE){
+  dmvnorm(as.numeric(data$y),mean = as.numeric(data$x%*%beta), sigma = 1/tau*diag(length(data$y)),log = log)*prior.beta(beta)
+}
+
+lasso.mcmc <- function(data, n.beta){
   N = 100000
-  burnin = 500
   beta = matrix(data = NA,nrow = N, ncol = n.beta)
   beta[1,] = rep(0,n.beta)
-  mod1 = fit.inla(data, beta[1,])
-  tau = mod1$tau * 0
+  tau = c()
   pb <- txtProgressBar(min = 0, max = N, style = 3)
   acc.prob = c()
   for (i in seq(2,N)){
     setTxtProgressBar(pb, i)
+    tau = c(tau, r.tau(data,beta[i-1,]))
     beta[i,] = rq.beta(beta[i-1,])
-    mod2 = fit.inla(data,beta[i,])
     acc.prob = c(acc.prob,
-                 mod2$mlik + 
-                   prior.beta(beta[i,]) +
+                 d.y(data,beta[i,],tau[i-1]) + 
                    dq.beta(beta[i,],beta[i-1,]) - 
-                   mod1$mlik -
-                   prior.beta(beta[i-1,]) - 
+                   d.y(data,beta[i-1,],tau[i-1]) - 
                    dq.beta(beta[i-1,], beta[i,]))
     if (log(runif(1))>acc.prob[i-1]){
       beta[i,] = beta[i-1,]
-      if (i >burnin){
-        tau = tau + mod1$tau 
-      }
-    }else if (i > burnin){
-      tau = tau + mod2$tau 
     }
   }
   return(list(beta = beta, 
-              tau = tau/(N-burnin),
-              acc.prob = min(exp(acc.prob),1)))
+              tau = tau,
+              acc.prob = sapply(exp(acc.prob),min,1)))
 }
 
 set.seed(123)
-mod = lasso.mcmc.w.inla(d, n.beta)
+mod = lasso.mcmc(d, n.beta)
 
-save(mod, file = "lasso-mcmc-w-inla2.Rdata")
+save(mod, file = "lasso-mcmc.Rdata")
