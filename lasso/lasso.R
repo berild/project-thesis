@@ -6,7 +6,6 @@ library(smoothmest)#Laplace distribution
 library(mvtnorm)
 
 
-
 fit.inla <- function(data, b) {
   data$oset <- data$x %*% matrix(b, ncol = 1)
   res <- inla(y ~ -1 + offset(oset), data = data)
@@ -14,7 +13,7 @@ fit.inla <- function(data, b) {
   return(list(mlik = res$mlik[[1]], alfa = res$marginals.fixed[[1]], tau = res$marginals.hyperpar[[1]]))
 }
 
-prior.beta <- function(x, mu = 0, lambda = 0.073, log = TRUE) {
+prior.beta <- function(x, mu = 0, lambda = 1/0.73, log = TRUE) {
   res <- sum(log(ddoublex(x, mu = mu, lambda = lambda)))
   
   if(!log) { res <- exp(res) }
@@ -55,7 +54,7 @@ rq.beta <- function(x, sigma = stdev.samp) {
 }
 
 lasso.mcmc.w.inla <- function(data, n.beta){
-  N = 100000
+  N = 1000
   burnin = 500
   beta = matrix(data = NA,nrow = N, ncol = n.beta)
   beta[1,] = rep(0,n.beta)
@@ -91,4 +90,4 @@ lasso.mcmc.w.inla <- function(data, n.beta){
 set.seed(123)
 mod = lasso.mcmc.w.inla(d, n.beta)
 
-save(mod, file = "lasso-mcmc-w-inla2.Rdata")
+save(mod, file = "./lasso/lasso-mcmc-w-inla.Rdata")

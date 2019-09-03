@@ -1,12 +1,12 @@
 library(tidyverse)
 library(ISLR)
 library(glmnet)
-library(smoothmest)#Laplace distribution
+library(smoothmest) #Laplace distribution
 library(mvtnorm)
 
 
 
-prior.beta <- function(x, mu = 0, lambda = 0.073, log = TRUE) {
+prior.beta <- function(x, mu = 0, lambda = 1/0.73, log = TRUE) {
   res <- sum(log(ddoublex(x, mu = mu, lambda = lambda)))
   
   if(!log) { res <- exp(res) }
@@ -81,6 +81,6 @@ lasso.mcmc <- function(data, n.beta){
 }
 
 set.seed(123)
-mod = lasso.mcmc(d, n.beta)
+  mod = lasso.mcmc(d, n.beta)
 
 save(mod, file = "lasso-mcmc.Rdata")
