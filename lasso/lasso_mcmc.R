@@ -47,8 +47,8 @@ rq.beta <- function(x, sigma = stdev.samp) {
 
 r.tau <- function(data, beta){
   shape = 1.5
-  scale = 1/(1/(5*10^(-5)) + t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta))
-  rgamma(1, shape = shape, scale = scale)
+  rate = 1/(5*10^(-5)) + t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)
+  rgamma(1, shape = shape, rate = rate)
 }
 
 d.y <- function(data,beta,tau,log = TRUE){

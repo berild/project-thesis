@@ -1533,33 +1533,51 @@ div.tocify {
 \mathbf{\beta}^* \sim q(\beta^*\, | \, \beta, \mathbf{y}, \tau) = \mathcal{N}_p\left(\mathbf{0},(4\cdot\mathbf{X}^T\mathbf{X})^{-1}\right),
 \]</span></p>
 <p style="color:red;background-color:yellow;">
-This might be wrong! mean of previous <span class="math inline">\(\beta\)</span>
+This might be wrong! mean of previous <span class="math inline">\(\beta\)</span>. Currently being tested
 </p>
 <p>and the prior for <span class="math inline">\(\tau\)</span> is given by <span class="math display">\[
 \tau \sim \mathrm{Gamma}\left(1, 5\mathrm{e}-0.5\right).
 \]</span></p>
-</div>
-<div class="section level2">
-<h2><i class="ion  ion-arrow-right-b "></i><i class="ion  ion-arrow-right-b "></i> Method</h2>
-<div class="section level3">
-<h3><i class="ion  ion-arrow-right-b "></i><i class="ion  ion-arrow-right-b "></i><i class="ion  ion-arrow-right-b "></i> McMC</h3>
-<p><span class="math display">\[ 
-\pi(\beta,\tau \, | \, \mathbf{y}) \propto \pi(\mathbf{y}|\beta,\tau)\pi(\beta)\pi(\tau)
-\]</span></p>
-<p><span class="math display">\[ 
+<p>The posterior distribution is given by <span class="math display">\[ 
+\pi(\beta,\tau \, | \, \mathbf{y}) \propto \pi(\mathbf{y}|\beta,\tau)\pi(\beta)\pi(\tau),
+\]</span> thereby yielding the posterior marginal distributions <span class="math display">\[
 \pi(\beta\, | \, \mathbf{y},\tau) \propto \pi(\mathbf{y}|\beta,\tau)\pi(\beta)
-\]</span></p>
+\]</span> and</p>
 <p><span class="math display">\[
 \begin{align}
 \pi(\tau\, | \, \mathbf{y},\beta) &amp; \propto  \pi(\mathbf{y}|\beta,\tau)\pi(\tau) \\
  &amp; \propto  \tau^{\phi - 1}\mathrm{e}^{-\tau/\theta}\tau^{1/2}\exp\left\{\frac{1}{2}(\mathbf{y}-\mathbf{X}\beta)^T\tau\mathbf{I}_n(\mathbf{y}-\mathbf{X}\beta)\right\} \\ 
  &amp; = \tau^{\phi + \frac{1}{2} - 1} \exp\left\{-\tau(\frac{1}{\theta} + \frac{1}{2}(\mathbf{y}-\mathbf{X}\beta)^T(\mathbf{y}-\mathbf{X}\beta)) \right\} \\
- &amp; \propto \mathrm{Gamma}\left\{\phi + \frac{1}{2}, \left(\frac{1}{\theta} + \frac{1}{2}(\mathbf{y}-\mathbf{X}\beta)^T(\mathbf{y}-\mathbf{X}\beta)\right) ^{-1} \right\}
+ &amp; \propto \mathrm{Gamma}\left\{\phi + \frac{1}{2}, \left(\frac{1}{\theta} + \frac{1}{2}(\mathbf{y}-\mathbf{X}\beta)^T(\mathbf{y}-\mathbf{X}\beta)\right) ^{-1} \right\}.
 \end{align}
-\]</span></p>
+\]</span> We can sample from the conditional marginal of <span class="math inline">\(\tau\)</span>, but there are no known distribution for the conditional marginal of <span class="math inline">\(\beta\)</span>. Therefore we must find posterior marginals of <span class="math inline">\(\beta\)</span> by a Metropolitan-Hastings step, with block update on the model parameters.</p>
+</div>
+<div class="section level2">
+<h2><i class="ion  ion-arrow-right-b "></i><i class="ion  ion-arrow-right-b "></i> Method</h2>
+<pre class="r"><code>prior.beta &lt;- function(x, mu = 0, lambda = 1/0.73, log = TRUE) {
+  res = sum(log(ddoublex(x, mu = mu, lambda = lambda)))
+  
+  if(!log) { res = exp(res) }
+  
+  return(res)
+}</code></pre>
+<pre class="r"><code>dq.beta &lt;- function(x, y, sigma = stdev.samp, log =TRUE) {
+  dmvnorm(y, mean = x, sigma = sigma, log = log)
+}</code></pre>
+<pre class="r"><code>rq.beta &lt;- function(x, sigma = stdev.samp) {
+  as.vector(rmvnorm(1, mean = x, sigma = sigma))
+}</code></pre>
+<div class="section level3">
+<h3><i class="ion  ion-arrow-right-b "></i><i class="ion  ion-arrow-right-b "></i><i class="ion  ion-arrow-right-b "></i> McMC</h3>
+<p>Using the Markov chain Monte Carlo we need to draw samples from the conditional marginal of <span class="math inline">\(\tau\)</span>. This is done by the function <strong>r.tau()</strong>.</p>
+<pre class="r"><code>r.tau &lt;- function(data, beta){
+  shape = 1.5
+  scale = 1/(1/(5*10^(-5)) + t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta))
+  rgamma(1, shape = shape, scale = scale)
+}</code></pre>
 <p>From the markov assumption and the Metropolis choice the acceptance probability is given by</p>
 <p><span class="math display">\[
-\mathrm{acc.prob} = \min\left\{1, \frac{\pi(\mathbf{y}\, | \, \beta^*,\tau)\pi(\beta^*)q(\beta\, | \, \beta^*)}{\pi(\mathbf{y}\, | \, \beta,\tau)\pi(\beta)q(\beta^*\, | \, \beta)}\right\}
+\alpha = \min\left\{1, \frac{\pi(\mathbf{y}\, | \, \beta^*,\tau)\pi(\beta^*)q(\beta\, | \, \beta^*)}{\pi(\mathbf{y}\, | \, \beta,\tau)\pi(\beta)q(\beta^*\, | \, \beta)}\right\}
 \]</span></p>
 </div>
 <div class="section level3">
@@ -1568,6 +1586,9 @@ This might be wrong! mean of previous <span class="math inline">\(\beta\)</span>
 \alpha = \min\left\{1,\frac{\pi(\mathbf{y}\, | \, \beta^*)\pi(\beta^*)q(\beta\, | \, \beta^*)}{\mathbf{y}\, | \, \beta)\pi(\beta)q(\beta^*\, | \, \beta)}\right\}
 \]</span></p>
 </div>
+</div>
+<div class="section level2">
+<h2><i class="ion  ion-arrow-right-b "></i><i class="ion  ion-arrow-right-b "></i> Results</h2>
 </div>
 </div>
 <div class="section level1">

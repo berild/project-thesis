@@ -59,41 +59,72 @@ $$
 \vect{\beta}^* \sim q(\beta^*\given\beta, \vect{y}, \tau) = \norm_p\left(\vect{0},(4\cdot\matr{X}^T\matr{X})^{-1}\right),
 $$
 
-<p style="color:red;background-color:yellow;">This might be wrong! mean of previous $\beta$</p>
+<p style="color:red;background-color:yellow;">This might be wrong! mean of previous $\beta$. Currently being tested</p>
 and the prior for $\tau$ is given by
 $$
 \tau \sim \ga\left(1, 5\mathrm{e}-0.5\right).
 $$
 
-
-## `r icon:: ii("arrow-right-b")``r icon:: ii("arrow-right-b")`  Method
-
-### `r icon:: ii("arrow-right-b")``r icon:: ii("arrow-right-b")``r icon:: ii("arrow-right-b")`  McMC
-
+The posterior distribution is given by
 $$ 
-\pi(\beta,\tau \given\vect{y}) \propto \pi(\vect{y}|\beta,\tau)\pi(\beta)\pi(\tau)
+\pi(\beta,\tau \given\vect{y}) \propto \pi(\vect{y}|\beta,\tau)\pi(\beta)\pi(\tau),
 $$
-
-
-
-$$ 
+thereby yielding the posterior marginal distributions 
+$$
 \pi(\beta\given\vect{y},\tau) \propto \pi(\vect{y}|\beta,\tau)\pi(\beta)
 $$
-
+and
 
 $$
 \begin{align}
 \pi(\tau\given\vect{y},\beta) & \propto  \pi(\vect{y}|\beta,\tau)\pi(\tau) \\
  & \propto  \tau^{\phi - 1}\mathrm{e}^{-\tau/\theta}\tau^{1/2}\exp\left\{\frac{1}{2}(\vect{y}-\matr{X}\beta)^T\tau\matr{I}_n(\vect{y}-\matr{X}\beta)\right\} \\ 
  & = \tau^{\phi + \frac{1}{2} - 1} \exp\left\{-\tau(\frac{1}{\theta} + \frac{1}{2}(\vect{y}-\matr{X}\beta)^T(\vect{y}-\matr{X}\beta)) \right\} \\
- & \propto \ga\left\{\phi + \frac{1}{2}, \left(\frac{1}{\theta} + \frac{1}{2}(\vect{y}-\matr{X}\beta)^T(\vect{y}-\matr{X}\beta)\right) ^{-1} \right\}
+ & \propto \ga\left\{\phi + \frac{1}{2}, \left(\frac{1}{\theta} + \frac{1}{2}(\vect{y}-\matr{X}\beta)^T(\vect{y}-\matr{X}\beta)\right) ^{-1} \right\}.
 \end{align}
 $$
+We can sample from the conditional marginal of $\tau$, but there are no known distribution for the conditional marginal of $\beta$. Therefore we must find posterior marginals of $\beta$ by a Metropolitan-Hastings step, with block update on the model parameters. 
+
+## `r icon:: ii("arrow-right-b")``r icon:: ii("arrow-right-b")`  Method
+
+```{r prior.beta, eval=FALSE}
+prior.beta <- function(x, mu = 0, lambda = 1/0.73, log = TRUE) {
+  res = sum(log(ddoublex(x, mu = mu, lambda = lambda)))
+  
+  if(!log) { res = exp(res) }
+  
+  return(res)
+}
+```
+
+```{r dq.beta, eval=FALSE}
+dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
+  dmvnorm(y, mean = x, sigma = sigma, log = log)
+}
+```
+
+```{r rq.beta, eval=FALSE}
+rq.beta <- function(x, sigma = stdev.samp) {
+  as.vector(rmvnorm(1, mean = x, sigma = sigma))
+}
+```
+
+
+### `r icon:: ii("arrow-right-b")``r icon:: ii("arrow-right-b")``r icon:: ii("arrow-right-b")`  McMC
+Using the Markov chain Monte Carlo we need to draw samples from the conditional marginal of $\tau$. This is done by the function **r.tau()**.
+
+```{r r.tau, eval=FALSE}
+r.tau <- function(data, beta){
+  shape = 1.5
+  rate = 1/(1/(5*10^(-5)) + t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta))
+  rgamma(1, shape = shape, rate = rate)
+}
+```
 
 From the markov assumption and the Metropolis choice the acceptance probability is given by
 
 $$
-\mathrm{acc.prob} = \min\left\{1, \frac{\pi(\vect{y}\given\beta^*,\tau)\pi(\beta^*)q(\beta\given\beta^*)}{\pi(\vect{y}\given\beta,\tau)\pi(\beta)q(\beta^*\given\beta)}\right\}
+\alpha = \min\left\{1, \frac{\pi(\vect{y}\given\beta^*,\tau)\pi(\beta^*)q(\beta\given\beta^*)}{\pi(\vect{y}\given\beta,\tau)\pi(\beta)q(\beta^*\given\beta)}\right\}.
 $$
 
 

@@ -54,7 +54,7 @@ rq.beta <- function(x, sigma = stdev.samp) {
 }
 
 lasso.mcmc.w.inla <- function(data, n.beta){
-  N = 1000
+  N = 100000
   burnin = 500
   beta = matrix(data = NA,nrow = N, ncol = n.beta)
   beta[1,] = rep(0,n.beta)
