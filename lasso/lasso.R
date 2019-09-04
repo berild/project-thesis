@@ -81,11 +81,11 @@ lasso.mcmc.w.inla <- function(data, n.beta){
                    dq.beta(beta[i-1,], beta[i,]))
     if (log(runif(1))>acc.prob[i-1]){
       beta[i,] = beta[i-1,]
-      if (i >burnin){
-        tau = tau + mod1$tau 
-      }
-    }else if (i > burnin){
-      tau = tau + mod2$tau 
+    }else{ 
+      mod1 = mod2
+    }
+    if (i > burnin){
+      tau = tau + mod1$tau
     }
   }
   return(list(beta = beta, 
