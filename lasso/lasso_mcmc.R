@@ -38,18 +38,18 @@ stdev.samp <- .25 * solve(t(x)%*%x)
 
 
 dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
-  dmvnorm(y, mean = rep(0,length(x)), sigma = sigma, log = log)
+  dmvnorm(y, mean = x, sigma = sigma, log = log)
 }
 
 rq.beta <- function(x, sigma = stdev.samp) {
-  as.vector(rmvnorm(1, mean = rep(0,length(x)), sigma = sigma))
+  as.vector(rmvnorm(1, mean = y, sigma = sigma))
 }
 
 r.tau <- function(data, beta){
-  shape = 1.5
+  shape = 1
   rate = 1/(5*10^(-5)) + 
     t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)
-  rgamma(1, shape = shape, rate = rate)
+  rgamma(1, shape = shape, rate = rate, scale = 1/rate)
 }
 
 d.y <- function(data,beta,tau,log = TRUE){

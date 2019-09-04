@@ -16,7 +16,7 @@ fit.inla <- function(data, x.mis) {
   
   return(list(mlik = res$mlik[[1]], 
               alfa = res$marginals.fixed[[1]], 
-              beta = res$marginals.fixed[[2]], 
+              beta = res$marginals.fixed[[2]],
               tau = res$marginals.hyperpar[[1]]))
 }
 
@@ -36,13 +36,14 @@ prior.x.mis <- function(x, mu = mean(d.mis$bmi, na.rm = TRUE),
   sum(dnorm(x, mean = mu, sd= sigma, log = log))
 }
 
-missing.mcmc.w.inla <- function(data, n.mis){
+missing.mcmc.w.inla <- function(data, n.mis,idx.mis){
   N = 10000
   burnin = 500
   mu = mean(data$bmi, na.rm = TRUE)
   sigma = 2*sd(data$bmi, na.rm = TRUE)
   x.mis = matrix(data = NA,nrow = N, ncol = n.mis)
-  x.mis[1,] = rep(mean(data$bmi,na.rm = TRUE),n.mis)
+  colnames(x.mis) = sapply(idx.mis,toString)
+  x.mis[1,] = rep(mu,n.mis)
   mod1 = fit.inla(data,x.mis[1,])
   alfa = mod1$alfa * 0
   beta = mod1$beta * 0 
@@ -80,6 +81,6 @@ missing.mcmc.w.inla <- function(data, n.mis){
               acc.prob = sapply(exp(acc.prob),min,1)))
 }
 
-mod <- missing.mcmc.w.inla(d.mis, n.mis)
+mod <- missing.mcmc.w.inla(d.mis, n.mis, idx.mis)
 
-save(mod, file = "missing-mcmc-w-inla.Rdata")
+save(mod, file = "./missing/missing-mcmc-w-inla2.Rdata")

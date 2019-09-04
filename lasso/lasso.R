@@ -37,26 +37,29 @@ y <- scale(y)
 x <- scale(x)
 d <- list(y = y, x = x)
 n.beta <- ncol(d$x)
-summary( fit.inla(d, b = rep(0, n.beta))$model )
 
 
 x1 <-cbind(1,x)
 ML.betas <- solve(t(x1)%*%x1)%*%t(x1)%*%y
 ML.betas
 
+# Not using intercept since it is so small
+
+# finding inverse of the precision
 stdev.samp <- .25 * solve(t(x)%*%x)
 
-
+# proposal distribution of beta
 dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
   dmvnorm(y, mean = x, sigma = sigma, log = log)
 }
 
+# sampling from the proposal of beta
 rq.beta <- function(x, sigma = stdev.samp) {
   as.vector(rmvnorm(1, mean = x, sigma = sigma))
 }
 
 lasso.mcmc.w.inla <- function(data, n.beta){
-  N = 100000
+  N = 10000
   burnin = 500
   beta = matrix(data = NA,nrow = N, ncol = n.beta)
   colnames(beta) = colnames(data$x)
