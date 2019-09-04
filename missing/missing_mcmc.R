@@ -1,26 +1,10 @@
 library(mice)
-library(INLA)
 
 data(nhanes2)
 
 d.mis <- nhanes2
 idx.mis <- which(is.na(d.mis$bmi))
 n.mis <- length(idx.mis)
-
-
-fit.inla <- function(data, x.mis) { 
-  
-  data$bmi[idx.mis] <- x.mis
-  
-  res <- inla(chl ~ 1 + bmi + age, data = data)
-  
-  return(list(mlik = res$mlik[[1]], 
-              alfa = res$marginals.fixed[[1]], 
-              beta = res$marginals.fixed[[2]], 
-              tau = res$marginals.hyperpar[[1]]))
-}
-
-
 
 dq.x.mis <- function(x, y, sigma = sqrt(0.001), log =TRUE) {
   sum(dnorm(y, mean = x, sd = sigma, log = log))
@@ -31,12 +15,22 @@ rq.x.mis <- function(x, sigma = sqrt(0.001)) {
 }
 
 
+r.tau <- function(data, beta){
+  shape = 1.5
+  rate = 1/(5*10^(-5)) + t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)
+  rgamma(1, shape = shape, rate = rate)
+}
+
+d.y <- function(data,beta,tau,log = TRUE){
+  dmvnorm(as.numeric(data$y),mean = as.numeric(data$x%*%beta), sigma = 1/tau*diag(length(data$y)),log = log)*prior.beta(beta)
+}
+
 prior.x.mis <- function(x, mu = mean(d.mis$bmi, na.rm = TRUE), 
-                       sigma = 2*sd(d.mis$bmi, na.rm = TRUE), log = TRUE) {
+                        sigma = 2*sd(d.mis$bmi, na.rm = TRUE), log = TRUE) {
   sum(dnorm(x, mean = mu, sd= sigma, log = log))
 }
 
-missing.mcmc.w.inla <- function(data, n.mis){
+missing.mcmc <- function(data, n.mis){
   N = 10000
   burnin = 500
   mu = mean(data$bmi, na.rm = TRUE)
@@ -80,6 +74,6 @@ missing.mcmc.w.inla <- function(data, n.mis){
               acc.prob = sapply(exp(acc.prob),min,1)))
 }
 
-mod <- missing.mcmc.w.inla(d.mis, n.mis)
+mod <- missing.mcmc(d.mis, n.mis)
 
-save(mod, file = "missing-mcmc-w-inla.Rdata")
+save(mod, file = "missing-mcmc.Rdata")

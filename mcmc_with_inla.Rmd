@@ -131,18 +131,20 @@ $$
 ### `r icon:: ii("arrow-right-b")``r icon:: ii("arrow-right-b")``r icon:: ii("arrow-right-b")`  McMC with INLA
 The Laplace prior is not available in **R-INLA**, but by fixating the values of $\beta$, and conditioning on them, the model can be fitted. This means that we draw from the same proposal distribution to get samples of $\beta$. Then we fit the model with **R-INLA**, to get the conditional marginal likelihood $\pi(\vect{y}\given\beta)$, and the approximation of the conditional marginal distribution $\pi(\tau\given\vect{y},\beta)$. The posterior marginal $\pi(\tau\given\vect{y})$ is then found by Bayesian model averaging. The acceptance probability is now given by the equation
 $$
-\alpha = \min\left\{1,\frac{\pi(\vect{y}\given\beta^*)\pi(\beta^*)q(\beta\given\beta^*)}{\vect{y}\given\beta)\pi(\beta)q(\beta^*\given\beta)}\right\}
+\alpha = \min\left\{1,\frac{\pi(\vect{y}\given\beta^*)\pi(\beta^*)q(\beta\given\beta^*)}{\pi(\vect{y}\given\beta)\pi(\beta)q(\beta^*\given\beta)}\right\}
 $$
 
 ## `r icon:: ii("arrow-right-b")``r icon:: ii("arrow-right-b")`  Results
 
 # `r icon:: ii("arrow-right-b")`  Missing Covariates
 
+
+## `r icon:: ii("arrow-right-b")``r icon:: ii("arrow-right-b")`  Theory
+
+
 # `r icon:: ii("arrow-right-b")`  Spatial Econometric Model
 
 # `r icon:: ii("arrow-right-b")`  Classification
-
-
 
 
 
@@ -156,13 +158,9 @@ html, body{
 overflow-x: hidden;
 }
 .fluid-row{
-  /* also subtract section padding (1.5rem) */
   margin: 0 -601.5rem;
-  /* add back section padding (1.5rem) */
   padding: 0.25rem 1.5rem;
   background: rgb(54, 127, 209);
-  /* border has to be solid, not RGBa */
-  /* 9600px or equiv (600rem = 9600/16) */
   border-left: 600rem solid rgb(54, 127, 209);
   border-right: 600rem solid rgb(54, 127, 209);
   z-index: -1;
