@@ -1,21 +1,59 @@
 
-ggplot(as.data.frame(mod$tau),aes(x = x, y = y)) +
-  geom_line()
-as.data.frame(mod$beta)
-cbind(data.frame(step = seq(1,nrow(mod$beta))),as.data.frame(mod$beta))
-ggplot(cbind(data.frame(step = seq(1,nrow(mod$beta))),as.data.frame(mod$beta))) +
-  geom_line(aes(x = step, y = V2, color = "beta_1")) +
-  labs(color = "")
 
-beta = as.data.frame(mod$beta)
-colnames(beta) = c("beta_1","beta_2","beta_3","beta_4","beta_5")
-params = colnames(beta)
-beta2 = beta[-seq(5000),]
-ggplot(beta2,aes(x = beta_4)) +
-  geom_density(fill = "deepskyblue", alpha = 0.5)
+# McMC with INLA results
+tau = as.data.frame(mod$tau)
 
-beta %>%
-  gather(key,value, params) %>%
-  ggplot(aes(x = value)) +
-  geom_density(fill = "deepskyblue" , alpha = 0.5) +
-  facet_wrap(vars(key),scales="free",ncol = 1)
+
+res = cbind(data.frame(step = seq(nrow(mod$beta)), acc.prob = mod$acc.prob),as.data.frame(mod$beta))
+res$is_burnin = c(rep(T,500),rep(F,nrow(res)-500))
+
+ggplot(res) +
+  geom_line(aes(x = step, y = acc.prob))
+
+params = colnames(res[,-c(1,2,8)])
+
+means = data.frame(key = params, 
+                   value = c(sapply(res[,params],mean)))
+
+res = gather(res,key,value,params)
+
+traceplot <- ggplot(res, aes(x = step, y = value, color = is_burnin)) +
+  geom_line() +
+  facet_wrap(vars(key),scales="free",ncol = 2)
+
+traceplot
+
+distplot <- ggplot(res[res$is_burnin==F,]) +
+  geom_density(aes(x = value),fill = "deepskyblue" , alpha = 0.5) +
+  geom_vline(data = means,aes(xintercept = value),color = "firebrick") + 
+  geom_text(data = means,aes(label = sprintf("%.3f",value), x = value), 
+            y = 0.2, size = 6,color = "firebrick") + 
+  facet_wrap(vars(key),scales="free",ncol = 2)
+
+distplot
+
+# McMC results
+res = cbind(data.frame(step = seq(nrow(mod$beta)),acc.prob = mod$acc.prob, tau = mod$tau), as.data.frame(mod$beta))
+res$is_burnin = c(rep(T,500),rep(F,nrow(res)-500))
+params = colnames(res[,-c(1,2,9)])
+means = data.frame(key = params, 
+                   value = c(sapply(res[,params],mean)))
+
+res = gather(res,key,value,params)
+
+traceplot <- ggplot(res, aes(x = step, y = value, color = is_burnin)) +
+  geom_line() +
+  facet_wrap(vars(key),scales="free",ncol = 2)
+
+traceplot
+
+distplot <- ggplot(res[res$is_burnin==F,]) +
+  geom_density(aes(x = value),fill = "deepskyblue" , alpha = 0.5) +
+  geom_vline(data = means,aes(xintercept = value),color = "firebrick") + 
+  geom_text(data = means,aes(label = sprintf("%.3f",value), x = value), 
+            y = 0.2, size = 6,color = "firebrick") + 
+  facet_wrap(vars(key),scales="free",ncol = 2)
+
+distplot
+
+                   

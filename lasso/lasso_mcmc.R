@@ -38,34 +38,39 @@ stdev.samp <- .25 * solve(t(x)%*%x)
 
 
 dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
-  dmvnorm(y, mean = x, sigma = sigma, log = log)
+  dmvnorm(y, mean = rep(0,length(x)), sigma = sigma, log = log)
 }
 
 rq.beta <- function(x, sigma = stdev.samp) {
-  as.vector(rmvnorm(1, mean = x, sigma = sigma))
+  as.vector(rmvnorm(1, mean = rep(0,length(x)), sigma = sigma))
 }
 
 r.tau <- function(data, beta){
   shape = 1.5
-  rate = 1/(5*10^(-5)) + t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)
+  rate = 1/(5*10^(-5)) + 
+    t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)
   rgamma(1, shape = shape, rate = rate)
 }
 
 d.y <- function(data,beta,tau,log = TRUE){
-  dmvnorm(as.numeric(data$y),mean = as.numeric(data$x%*%beta), sigma = 1/tau*diag(length(data$y)),log = log)*prior.beta(beta)
+  dmvnorm(as.numeric(data$y),
+          mean = as.numeric(data$x%*%beta), 
+          sigma = 1/tau*diag(length(data$y)),
+          log = log) + prior.beta(beta)
 }
 
 lasso.mcmc <- function(data, n.beta){
-  N = 100000
+  N = 10000
   beta = matrix(data = NA,nrow = N, ncol = n.beta)
+  colnames(beta) = colnames(data$x)
   beta[1,] = rep(0,n.beta)
-  tau = c()
+  tau = c(r.tau(data,beta[1,]))
   pb <- txtProgressBar(min = 0, max = N, style = 3)
-  acc.prob = c()
+  acc.prob = c(0)
   for (i in seq(2,N)){
     setTxtProgressBar(pb, i)
-    tau = c(tau, r.tau(data,beta[i-1,]))
     beta[i,] = rq.beta(beta[i-1,])
+    tau = c(tau, r.tau(data,beta[i-1,]))
     acc.prob = c(acc.prob,
                  d.y(data,beta[i,],tau[i-1]) + 
                    dq.beta(beta[i,],beta[i-1,]) - 
@@ -81,6 +86,6 @@ lasso.mcmc <- function(data, n.beta){
 }
 
 set.seed(123)
-  mod = lasso.mcmc(d, n.beta)
+mod = lasso.mcmc(d, n.beta)
 
-save(mod, file = "lasso-mcmc.Rdata")
+save(mod, file = "./lasso/lasso-mcmc.Rdata")

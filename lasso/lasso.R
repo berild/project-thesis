@@ -7,14 +7,16 @@ library(mvtnorm)
 
 
 fit.inla <- function(data, b) {
-  data$oset <- data$x %*% matrix(b, ncol = 1)
-  res <- inla(y ~ -1 + offset(oset), data = data)
-  res <- inla.rerun(res)
-  return(list(mlik = res$mlik[[1]], alfa = res$marginals.fixed[[1]], tau = res$marginals.hyperpar[[1]]))
+  data$oset = data$x %*% b
+  res = inla(y ~ -1 + offset(oset), data = data)
+  res = inla.rerun(res)
+  return(list(mlik = res$mlik[[1]], 
+              alfa = res$marginals.fixed[[1]], 
+              tau = res$marginals.hyperpar[[1]]))
 }
 
 prior.beta <- function(x, mu = 0, lambda = 1/0.73, log = TRUE) {
-  res <- sum(log(ddoublex(x, mu = mu, lambda = lambda)))
+  res = sum(log(ddoublex(x, mu = mu, lambda = lambda)))
   
   if(!log) { res <- exp(res) }
   
@@ -57,6 +59,7 @@ lasso.mcmc.w.inla <- function(data, n.beta){
   N = 100000
   burnin = 500
   beta = matrix(data = NA,nrow = N, ncol = n.beta)
+  colnames(beta) = colnames(data$x)
   beta[1,] = rep(0,n.beta)
   mod1 = fit.inla(data, beta[1,])
   tau = mod1$tau * 0
@@ -64,7 +67,7 @@ lasso.mcmc.w.inla <- function(data, n.beta){
   acc.prob = c()
   for (i in seq(2,N)){
     setTxtProgressBar(pb, i)
-    beta[i,] = rq.beta(beta[i-1,])
+    beta[i,] = rq.beta(x = beta[i-1,])
     mod2 = fit.inla(data,beta[i,])
     acc.prob = c(acc.prob,
                  mod2$mlik + 
@@ -84,7 +87,7 @@ lasso.mcmc.w.inla <- function(data, n.beta){
   }
   return(list(beta = beta, 
               tau = tau/(N-burnin),
-              acc.prob = min(exp(acc.prob),1)))
+              acc.prob = sapply(exp(acc.prob),min,1)))
 }
 
 set.seed(123)
