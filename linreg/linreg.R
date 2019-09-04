@@ -6,7 +6,7 @@ draw.prop.beta <- function(b){
 }
 
 prob.prop.beta <- function(b1,b2){
-  sum(dnorm(b1,mean = b2, sd = 1/0.75, log = TRUE)
+  sum(dnorm(b1,mean = b2, sd = 1/0.75, log = TRUE))
 }
 
 prior.beta <- function(b) {
@@ -43,7 +43,6 @@ linreg.mcmc.w.inla <- function(data){
   alfa = mod1$alfa*0
   tau = mod1$tau * 0
   pb <- txtProgressBar(min = 0, max = N, style = 3)
-  browser()
   acc.prob = c(0)
   for (i in seq(2, N)){
     setTxtProgressBar(pb, i)
@@ -80,3 +79,6 @@ mod = linreg.mcmc.w.inla(df)
 save(mod, file = "./linreg/linreg.Rdata")
 mod_inla = inla(y~1 + x1 + x2,data = df)
 save(mod_inla, file = "./linreg/linreg_INLA.Rdata")
+
+
+
