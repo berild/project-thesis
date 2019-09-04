@@ -50,12 +50,12 @@ stdev.samp <- .25 * solve(t(x)%*%x)
 
 # proposal distribution of beta
 dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
-  dmvnorm(y, mean = x, sigma = sigma, log = log)
+  dmvnorm(y, mean = rep(0,length(y)), sigma = sigma, log = log)
 }
 
 # sampling from the proposal of beta
 rq.beta <- function(x, sigma = stdev.samp) {
-  as.vector(rmvnorm(1, mean = x, sigma = sigma))
+  as.vector(rmvnorm(1, mean = rep(0,length(x)), sigma = sigma))
 }
 
 lasso.mcmc.w.inla <- function(data, n.beta){
@@ -96,4 +96,4 @@ lasso.mcmc.w.inla <- function(data, n.beta){
 set.seed(123)
 mod = lasso.mcmc.w.inla(d, n.beta)
 
-save(mod, file = "./lasso/lasso-mcmc-w-inla.Rdata")
+save(mod, file = "./lasso/lasso-mcmc-w-inla-zero.Rdata")

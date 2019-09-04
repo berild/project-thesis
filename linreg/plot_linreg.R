@@ -2,7 +2,7 @@
 load(file = "./linreg/linreg.Rdata")
 tau = as.data.frame(mod$tau)
 alfa = as.data.frame(mod$alfa)
-res = cbind(data.frame(step = seq(nrow(mod$beta)), acc.prob = acc.prob),as.data.frame(mod$beta))
+res = cbind(data.frame(step = seq(nrow(mod$beta)), acc.prob = mod$acc.prob),as.data.frame(mod$beta))
 res$is_burnin = c(rep(T,500),rep(F,nrow(res)-500))
 
 ggplot(res) +
