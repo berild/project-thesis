@@ -1,16 +1,16 @@
 library(INLA)
 library(tidyverse)
 
-draw.prop.beta <- function(b,sigma = 1/0.75){
-  rnorm(length(b),mean = b, sd = sigma)
+draw.prop.beta <- function(b){
+  rnorm(length(b),mean = b, sd = 1/0.75)
 }
 
-prob.prop.beta <- function(b1,b2, sigma = 1/0.75, log = TRUE){
-  sum(dnorm(b1,mean = b2, sd = sigma, log = log))
+prob.prop.beta <- function(b1,b2){
+  sum(dnorm(b1,mean = b2, sd = 1/0.75, log = TRUE)
 }
 
-prior.beta <- function(b, sigma = sqrt(1/.001), log = TRUE) {
-  sum(dnorm(b, mean = 0, sd= sigma, log = log))
+prior.beta <- function(b) {
+  sum(dnorm(b, mean = 0, sd= sqrt(1/.001), log = TRUE))
 }
 
 
@@ -43,7 +43,8 @@ linreg.mcmc.w.inla <- function(data){
   alfa = mod1$alfa*0
   tau = mod1$tau * 0
   pb <- txtProgressBar(min = 0, max = N, style = 3)
-  acc.prob = c()
+  browser()
+  acc.prob = c(0)
   for (i in seq(2, N)){
     setTxtProgressBar(pb, i)
     beta[i,] = draw.prop.beta(beta[i-1,])
@@ -55,7 +56,7 @@ linreg.mcmc.w.inla <- function(data){
                    mod1$mlik -
                    prior.beta(beta[i-1,]) - 
                    prob.prop.beta(beta[i,], beta[i-1,]))
-    if (log(runif(1))>=acc.prob[i-1]){
+    if (log(runif(1))>=acc.prob[i]){
       beta[i,] = beta[i-1,]
       
     }else{
