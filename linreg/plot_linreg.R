@@ -2,13 +2,10 @@
 load(file = "./linreg/linreg.Rdata")
 tau = as.data.frame(mod$tau)
 alfa = as.data.frame(mod$alfa)
-res = cbind(data.frame(step = seq(nrow(mod$beta)), acc.prob = mod$acc.prob),as.data.frame(mod$beta))
-res$is_burnin = c(rep(T,500),rep(F,nrow(res)-500))
+res = cbind(data.frame(step = seq(nrow(mod$beta))),as.data.frame(mod$beta))
+res$is_burnin = c(rep(T,100),rep(F,nrow(res)-100))
 
-ggplot(res) +
-  geom_line(aes(x = step, y = acc.prob))
-
-params = colnames(res[,-c(1,2,ncol(res))])
+params = colnames(res[,-c(1,ncol(res))])
 
 means = data.frame(key = params, 
                    value = c(sapply(res[,params],mean)))
