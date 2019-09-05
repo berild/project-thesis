@@ -10,17 +10,12 @@ fit.inla <- function(data, b) {
   data$oset = data$x %*% b
   res = inla(y ~ -1 + offset(oset), data = data)
   res = inla.rerun(res)
-  return(list(mlik = res$mlik[[1]], 
-              alfa = res$marginals.fixed[[1]], 
+  return(list(mlik = res$mlik[[1]],  
               tau = res$marginals.hyperpar[[1]]))
 }
 
-prior.beta <- function(x, mu = 0, lambda = 1/0.73, log = TRUE) {
-  res = sum(log(ddoublex(x, mu = mu, lambda = lambda)))
-  
-  if(!log) { res <- exp(res) }
-  
-  return(res)
+prior.beta <- function(x) {
+  sum(log(ddoublex(x, mu = 0, lambda =  1/0.73)))
 }
 
 
@@ -38,19 +33,12 @@ x <- scale(x)
 d <- list(y = y, x = x)
 n.beta <- ncol(d$x)
 
-
-x1 <-cbind(1,x)
-ML.betas <- solve(t(x1)%*%x1)%*%t(x1)%*%y
-ML.betas
-
-# Not using intercept since it is so small
-
 # finding inverse of the precision
 stdev.samp <- .25 * solve(t(x)%*%x)
 
 # proposal distribution of beta
-dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
-  dmvnorm(y, mean = rep(0,length(y)), sigma = sigma, log = log)
+dq.beta <- function(x, sigma = stdev.samp) {
+  dmvnorm(x, mean = rep(0,length(x)), sigma = sigma, log = TRUE)
 }
 
 # sampling from the proposal of beta
@@ -58,7 +46,7 @@ rq.beta <- function(x, sigma = stdev.samp) {
   as.vector(rmvnorm(1, mean = rep(0,length(x)), sigma = sigma))
 }
 
-lasso.mcmc.w.inla <- function(data, n.beta){
+lasso.mcmc.w.inla <- function(data, n.beta, stdev.samp){
   N = 10000
   burnin = 500
   beta = matrix(data = NA,nrow = N, ncol = n.beta)
@@ -67,19 +55,19 @@ lasso.mcmc.w.inla <- function(data, n.beta){
   mod1 = fit.inla(data, beta[1,])
   tau = mod1$tau * 0
   pb <- txtProgressBar(min = 0, max = N, style = 3)
-  acc.prob = c()
+  acc.prob = c(0)
   for (i in seq(2,N)){
     setTxtProgressBar(pb, i)
-    beta[i,] = rq.beta(x = beta[i-1,])
+    beta[i,] = rq.beta(x = beta[i-1,],sigma = stdev.samp)
     mod2 = fit.inla(data,beta[i,])
     acc.prob = c(acc.prob,
                  mod2$mlik + 
                    prior.beta(beta[i,]) +
-                   dq.beta(beta[i,],beta[i-1,]) - 
+                   dq.beta(beta[i-1,], sigma = stdev.samp) - 
                    mod1$mlik -
                    prior.beta(beta[i-1,]) - 
-                   dq.beta(beta[i-1,], beta[i,]))
-    if (log(runif(1))>acc.prob[i-1]){
+                   dq.beta(beta[i,], sigma = stdev.samp))
+    if (log(runif(1))>acc.prob[i]){
       beta[i,] = beta[i-1,]
     }else{ 
       mod1 = mod2
@@ -94,6 +82,6 @@ lasso.mcmc.w.inla <- function(data, n.beta){
 }
 
 set.seed(123)
-mod = lasso.mcmc.w.inla(d, n.beta)
+mod = lasso.mcmc.w.inla(d, n.beta, stdev.samp)
 
 save(mod, file = "./lasso/lasso-mcmc-w-inla-zero.Rdata")

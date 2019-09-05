@@ -1,32 +1,35 @@
+# INLA within McMC
+res = cbind(data.frame(step = seq(nrow(mod$x.mis)), acc.prob = mod$acc.prob),as.data.frame(mod$x.mis))
+params = colnames(res[,-c(1,2)])
+res$is_burnin = c(rep(T,500),rep(F,nrow(res)-500))
 
-x.mis = as.data.frame(mod$x.mis)
-colnames(x.mis) = c("Observation_1","Observation_3","Observation_4",
-                    "Observation_6","Observation_10","Observation_11",
-                    "Observation_12","Observation_16","Observation_21")
-params = colnames(x.mis)
-x.mis2 = x.mis[-seq(500),]
+means = data.frame(key = params, 
+                   value = c(sapply(res[,params],mean)))
+res = gather(res,key,value,params)
+res$key=factor(res$key,levels=params)
+res2 = rbind(
+  cbind(key = rep("beta_0",nrow(mod$beta_0)),as.data.frame(beta_0)),
+  cbind(key = rep("beta_1",nrow(mod$beta_1)),as.data.frame(beta_1)),
+  cbind(key = rep("beta_2",nrow(mod$beta_2)),as.data.frame(beta_2)),
+  cbind(key = rep("beta_3",nrow(mod$beta_3)),as.data.frame(beta_3)),
+  cbind(key = rep("tau",nrow(mod$tau)),as.data.frame(tau))
+)
 
-intercept = as.data.frame(mod$alfa)
-beta = as.data.frame(mod$beta)
-tau = as.data.frame(mod$tau)
+traceplot <- ggplot(res, aes(x = step, y = value, color = is_burnin)) +
+  geom_line() +
+  facet_wrap(vars(key),scales="free",ncol = 2)
 
-ggplot(intercept,aes(x = x,y = y)) + 
-  geom_line() + 
-  labs(title = "Intercept")
+traceplot
 
-ggplot(beta, aes(x = x, y = y)) + 
-  geom_line() + 
-  labs(title = "Beta")
+distplot <- ggplot(res[res$is_burnin==F,]) +
+  geom_density(aes(x = value),fill = "deepskyblue" , alpha = 0.5) +
+  geom_vline(data = means,aes(xintercept = value),color = "firebrick") + 
+  geom_text(data = means,aes(label = sprintf("%.3f",value), x = value), 
+            y = 0.02, size = 6,color = "firebrick") + 
+  facet_wrap(vars(key),scales="free",ncol = 2)
 
-ggplot(tau, aes(x = x, y = y)) + 
-  geom_line() + 
-  labs(title = "tau")
+distplot
 
-x.mis2 %>%
-  gather(key,value, params) %>%
-  ggplot(aes(x = value)) +
-  geom_density(fill = "deepskyblue" , alpha = 0.5) +
-  facet_wrap(vars(key),scales="free",ncol = 1)
-
-ggplot(x.mis2) + 
-  geom_density(aes(x = Observation_1),fill = "deepskyblue", alpha = 0.5)
+inladist <- ggplot(res2, aes(x = x, y = y)) + 
+  geom_line(color = "deepskyblue") + 
+  facet_wrap(.~key,scales = "free", ncol = 2)
