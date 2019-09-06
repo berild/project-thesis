@@ -1,14 +1,14 @@
 # McMC with INLA results
 load(file = "./linreg/linreg.Rdata")
 tau = as.data.frame(mod$tau)
-alfa = as.data.frame(mod$alfa)
+beta0 = as.data.frame(mod$beta0)
 res = cbind(data.frame(step = seq(nrow(mod$beta))),as.data.frame(mod$beta))
-res$is_burnin = c(rep(T,100),rep(F,nrow(res)-100))
+res$is_burnin = c(rep(T,500),rep(F,nrow(res)-500))
 
 params = colnames(res[,-c(1,ncol(res))])
 
 means = data.frame(key = params, 
-                   value = c(sapply(res[,params],mean)))
+                   value = c(sapply(res[res$is_burnin==F,params],mean)))
 
 res = gather(res,key,value,params)
 
@@ -27,6 +27,15 @@ distplot <- ggplot(res[res$is_burnin==F,]) +
 
 distplot
 
+tauplot <- ggplot(tau, aes(x = x, y = y)) + 
+  geom_line()
+
+tauplot
+
+beta0plot <- ggplot(beta0, aes(x = x, y = y)) + 
+  geom_line()
+
+beta0plot
 # INLA restults
 load(file = "./linreg/linreg_INLA.Rdata")
 beta_0 = as.data.frame(mod_inla$marginals.fixed[[1]]) 

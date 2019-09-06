@@ -1,19 +1,16 @@
 # McMC with INLA results
-tau = as.data.frame(mod$tau)
+tau = mod$tau
 
 ggplot(tau) + 
   geom_line(aes(x= x, y = y))
 
-res = cbind(data.frame(step = seq(nrow(mod$beta)), acc.prob = mod$acc.prob),as.data.frame(mod$beta))
-res$is_burnin = c(rep(T,500),rep(F,nrow(res)-500))
+res = cbind(data.frame(step = seq(nrow(mod$beta))),as.data.frame(mod$beta))
+res$is_burnin = c(rep(T,5),rep(F,nrow(res)-5))
 
-ggplot(res) +
-  geom_line(aes(x = step, y = acc.prob))
-
-params = colnames(res[,-c(1,2,ncol(res))])
+params = colnames(res[,-c(1,ncol(res))])
 
 means = data.frame(key = params, 
-                   value = c(sapply(res[,params],mean)))
+                   value = c(sapply(res[res$is_burnin==F,params],mean)))
 
 res = gather(res,key,value,params)
 

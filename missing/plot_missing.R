@@ -1,18 +1,20 @@
 # INLA within McMC
-res = cbind(data.frame(step = seq(nrow(mod$x.mis)), acc.prob = mod$acc.prob),as.data.frame(mod$x.mis))
+load(file = "missing-mcmc-w-inla.Rdata")
+res = cbind(data.frame(step = seq(nrow(mod$x.mis))),as.data.frame(mod$x.mis))
 params = colnames(res[,-c(1,2)])
-res$is_burnin = c(rep(T,500),rep(F,nrow(res)-500))
+res$is_burnin = c(rep(T,5),rep(F,nrow(res)-5))
 
 means = data.frame(key = params, 
-                   value = c(sapply(res[,params],mean)))
+                   value = c(sapply(res[res$is_burnin==F,params],mean)))
+
 res = gather(res,key,value,params)
 res$key=factor(res$key,levels=params)
 res2 = rbind(
-  cbind(key = rep("beta_0",nrow(mod$beta_0)),as.data.frame(beta_0)),
-  cbind(key = rep("beta_1",nrow(mod$beta_1)),as.data.frame(beta_1)),
-  cbind(key = rep("beta_2",nrow(mod$beta_2)),as.data.frame(beta_2)),
-  cbind(key = rep("beta_3",nrow(mod$beta_3)),as.data.frame(beta_3)),
-  cbind(key = rep("tau",nrow(mod$tau)),as.data.frame(tau))
+  cbind(key = rep("beta0",nrow(mod$beta0)),mod$beta0),
+  cbind(key = rep("beta1",nrow(mod$beta1)),mod$beta1),
+  cbind(key = rep("beta2",nrow(mod$beta2)),mod$beta2),
+  cbind(key = rep("beta3",nrow(mod$beta3)),mod$beta3),
+  cbind(key = rep("tau",nrow(mod$tau)),mod$tau)
 )
 
 traceplot <- ggplot(res, aes(x = step, y = value, color = is_burnin)) +
@@ -33,3 +35,4 @@ distplot
 inladist <- ggplot(res2, aes(x = x, y = y)) + 
   geom_line(color = "deepskyblue") + 
   facet_wrap(.~key,scales = "free", ncol = 2)
+inladist

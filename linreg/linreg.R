@@ -27,23 +27,43 @@ sample.linreg <- function(){
   x1 = runif(n)
   x2 = runif(n)
   err = rnorm(n)
-  y = 3 + 2*x1 -2*x2
+  y = 3 + 2*x1 -2*x2 + err
   df = data.frame(y = y, x1 = x1, x2 = x2)
 }
 
-dist.int <- function(x,n.step = 100){
+dist.init <- function(x,n.step = 100){
    lx = min(x)
    ux = max(x)
-   step = (ux- lx)/10
-   seq(from = lx - step,to = ux + step, by = (ux - lx + 2*step)/(n.step-1))
+   step = (ux - lx)/(n.step-1)
+   seq(from = lx - step, to = ux + step, by = (ux - lx)/(n.step-1))
 }
+
 
 moving.marginals <- function(new.marginal, avg.marginal, n){
+  step = avg.marginal$x[2] - avg.marginal$x[1]
+  new.x = avg.marginal$x
+  new.y = avg.marginal$y
+  if (max(new.marginal[,"x"])>max(new.x)){
+    new.u = seq(from = max(new.x) + step,
+                to = max(new.marginal[,"x"])+ step,
+                by = step)
+    new.x = c(new.x, new.u)
+    new.y = c(new.y,rep(0,length(new.u)))
+  }
+  if (min(new.marginal[,"x"])<min(new.x)){
+    new.l = seq(from = min(new.x) - step,
+                to = min(new.marginal[,"x"]) - step,
+                by = - step)
+    new.x = c(rev(new.l), new.x)
+    new.y = c(rep(0,length(new.l)),new.y)
+  }
+  avg.marginal = data.frame(x = new.x, y = new.y)
   tmp = inla.dmarginal(avg.marginal$x, new.marginal, log = FALSE)
-  (tmp + (n-1)*avg.marginal$y)/n
+  avg.marginal$y = (tmp + (n-1)*avg.marginal$y)/n
+  avg.marginal
 }
 
-linreg.mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 1, n.thin = 1){
+linreg.mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 5, n.thin = 1){
   beta = matrix(data = NA,nrow = n.samples, ncol = 2)
   mlik = numeric(n.samples)
   acc.vec = numeric(n.samples)
@@ -51,9 +71,11 @@ linreg.mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 1, n.thin = 1){
   beta[1,] = c(0,0)
   mod.curr = fit.inla(data, beta = beta[1,])
   mlik[1] = mod.curr$mlik
-  beta0 = data.frame(x = rep(0,100), y = rep(0,100))
-  tau = data.frame(x = rep(0,100), y = rep(0,100))
+  beta0 = data.frame(x = rep(0,102), y = rep(0,102))
+  tau = data.frame(x = rep(0,102), y = rep(0,102))
+  pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
   for (i in seq(2, n.samples)){
+    setTxtProgressBar(pb, i)
     beta.new = rq.beta(beta[i-1,])
     mod.new = fit.inla(data, beta = beta.new)
     lacc1 = mod.new$mlik + prior.beta(beta.new) + dq.beta(beta.new, beta[i-1,])
@@ -67,24 +89,24 @@ linreg.mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 1, n.thin = 1){
       
     }else{
       beta[i,] = beta[i-1,]
-      mod.prev = mod.new
       mlik[i] = mlik[i-1]
       acc.vec[i] = F
     }
     if(i == n.burnin){
-      browser()
-      beta0$x = dist.int(x = mod.prev$beta0[,"x"])
-      tau$x = dist.int(x = mod.prev$tau[,"x"])
+      beta0$x = dist.init(x = mod.curr$beta0[,"x"])
+      tau$x = dist.init(x = mod.curr$tau[,"x"])
     }else if(i > n.burnin){
-      beta0$y = moving.marginals(new.marginal = mod.prev$beta0,
+      beta0 = moving.marginals(new.marginal = mod.curr$beta0,
                                  avg.marginal = beta0,
-                                 n = i-n)
-      tau$y = moving.marginals(new.marginal = mod.prev$tau,
+                                 n = i-n.burnin)
+      tau = moving.marginals(new.marginal = mod.curr$tau,
                                  avg.marginal = tau,
-                                 n = i-n)
+                                 n = i-n.burnin)
     }
   }
   return(list(beta = beta,
+              beta0 = beta0,
+              tau = tau,
               acc.vec = acc.vec,
               mlik = mlik))
 }
@@ -92,7 +114,7 @@ linreg.mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 1, n.thin = 1){
 
 set.seed(1)
 df = sample.linreg()
-mod = linreg.mcmc.w.inla(df,n.samples = 1000,n.burnin = 100)
+mod = linreg.mcmc.w.inla(df,n.samples = 100000,n.burnin = 500)
 save(mod, file = "./linreg/linreg.Rdata")
 mod_inla = inla(y~1 + x1 + x2,data = df)
 save(mod_inla, file = "./linreg/linreg_INLA.Rdata")
