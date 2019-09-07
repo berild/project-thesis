@@ -1,9 +1,7 @@
 # McMC with INLA results
 load(file = "./linreg/linreg.Rdata")
-tau = as.data.frame(mod$tau)
-beta0 = as.data.frame(mod$beta0)
 res = cbind(data.frame(step = seq(nrow(mod$beta))),as.data.frame(mod$beta))
-res$is_burnin = c(rep(T,500),rep(F,nrow(res)-500))
+res$is_burnin = c(rep(T,5000),rep(F,nrow(res)-5000))
 
 params = colnames(res[,-c(1,ncol(res))])
 
@@ -11,6 +9,11 @@ means = data.frame(key = params,
                    value = c(sapply(res[res$is_burnin==F,params],mean)))
 
 res = gather(res,key,value,params)
+
+res2 = rbind(
+  cbind(key = rep("beta0",nrow(mod$beta0)),mod$beta0),
+  cbind(key = rep("tau",nrow(mod$tau)),mod$tau)
+)
 
 traceplot <- ggplot(res, aes(x = step, y = value, color = is_burnin)) +
   geom_line() +
@@ -24,18 +27,13 @@ distplot <- ggplot(res[res$is_burnin==F,]) +
   geom_text(data = means,aes(label = sprintf("%.3f",value), x = value), 
             y = 0.2, size = 6,color = "firebrick") + 
   facet_wrap(vars(key),scales="free",ncol = 2)
-
 distplot
 
-tauplot <- ggplot(tau, aes(x = x, y = y)) + 
-  geom_line()
+post.marg.plot <- ggplot(res2, aes(x = x, y = y)) + 
+  geom_line() + 
+  facet_wrap(.~key, scales = "free", ncol = 2)
+post.marg.plot
 
-tauplot
-
-beta0plot <- ggplot(beta0, aes(x = x, y = y)) + 
-  geom_line()
-
-beta0plot
 # INLA restults
 load(file = "./linreg/linreg_INLA.Rdata")
 beta_0 = as.data.frame(mod_inla$marginals.fixed[[1]]) 

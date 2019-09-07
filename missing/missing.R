@@ -104,7 +104,7 @@ missing.mcmc.w.inla <- function(data, n.mis,idx.mis, n.samples = 100, n.burnin =
     lacc1 = mod.new$mlik + prior.x.mis(x.mis.new) + dq.x.mis(x.mis.new, x.mis[i-1,])
     lacc2 = mod.curr$mlik + prior.x.mis(x.mis[i-1,]) + dq.x.mis(x.mis[i-1,], x.mis.new)
     acc = acc = min(1,exp(lacc1 - lacc2))
-    if (runif(1)>acc){
+    if (runif(1)<acc){
       x.mis[i,] = x.mis.new
       mod.curr = mod.new
       mlik[i] = mod.new$mlik

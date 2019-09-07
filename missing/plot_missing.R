@@ -1,7 +1,7 @@
 # INLA within McMC
 load(file = "missing-mcmc-w-inla.Rdata")
 res = cbind(data.frame(step = seq(nrow(mod$x.mis))),as.data.frame(mod$x.mis))
-params = colnames(res[,-c(1,2)])
+params = colnames(res[,-c(1)])
 res$is_burnin = c(rep(T,5),rep(F,nrow(res)-5))
 
 means = data.frame(key = params, 
