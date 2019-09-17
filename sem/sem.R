@@ -42,51 +42,97 @@ prior.rho <- function(x, log = TRUE) {
   dunif(x, -1.5, 1, log = log)
 }
 
-sem.mcmc.w.inla <- function(data){
-  N = 100000
-  burnin = 500
-  rho = c(0)
-  mod1 = fit.inla(data, rho[1])
-  intercept = mod1$intercept*0
-  INC = mod1$INC*0
-  HOVAL = mod1$HOVAL*0
-  tau = mod1$tau*0
-  acc.prob = c()
-  pb <- txtProgressBar(min = 0, max = N, style = 3)
-  for (i in seq(2,N)){
+
+
+dist.init <- function(x,n.step = 100){
+  lx = min(x)
+  ux = max(x)
+  step = (ux - lx)/(n.step-1)
+  seq(from = lx - step, to = ux + step, by = (ux - lx)/(n.step-1))
+}
+
+
+moving.marginals <- function(new.marginal, avg.marginal, n){
+  step = avg.marginal$x[2] - avg.marginal$x[1]
+  new.x = avg.marginal$x
+  new.y = avg.marginal$y
+  if (max(new.marginal[,"x"])>max(new.x)){
+    new.u = seq(from = max(new.x) + step,
+                to = max(new.marginal[,"x"])+ step,
+                by = step)
+    new.x = c(new.x, new.u)
+    new.y = c(new.y,rep(0,length(new.u)))
+  }
+  if (min(new.marginal[,"x"])<min(new.x)){
+    new.l = seq(from = min(new.x) - step,
+                to = min(new.marginal[,"x"]) - step,
+                by = - step)
+    new.x = c(rev(new.l), new.x)
+    new.y = c(rep(0,length(new.l)),new.y)
+  }
+  avg.marginal = data.frame(x = new.x, y = new.y)
+  tmp = inla.dmarginal(avg.marginal$x, new.marginal, log = FALSE)
+  avg.marginal$y = (tmp + (n-1)*avg.marginal$y)/n
+  avg.marginal
+}
+
+sem.mcmc.w.inla <- function(data, n.samples = 100, n.burnin = 5, n.thin = 1){
+  rho = numeric(n.samples)
+  mlik = numeric(n.samples)
+  acc.vec = numeric(n.samples)
+  mod.curr = fit.inla(data, rho[1])
+  mlik[1] = mod.curr$mlik
+  intercept =data.frame(x = rep(0,102), y = rep(0,102))
+  INC = data.frame(x = rep(0,102), y = rep(0,102))
+  HOVAL = data.frame(x = rep(0,102), y = rep(0,102))
+  tau = data.frame(x = rep(0,102), y = rep(0,102))
+  pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
+  for (i in seq(2,n.samples)){
     setTxtProgressBar(pb, i)
-    rho = c(rho,rq.rho(rho[i-1]))
-    mod2 = fit.inla(data,rho[i])
-    acc.prob = c(acc.prob,
-                 mod2$mlik + 
-                   prior.rho(rho[i]) +
-                   dq.rho(rho[i],rho[i-1]) - 
-                   mod1$mlik -
-                   prior.rho(rho[i-1]) - 
-                   dq.rho(rho[i-1], rho[i]))
-    if (log(runif(1))>acc.prob[i-1]){
+    rho.new = rq.rho(rho[i-1])
+    mod.new = fit.inla(data,rho[i])
+    lacc1 = mod.new$mlik + prior.rho(rho.new) + dq.rho(rho.new, rho[i-1])
+    lacc2 = mod.curr$mlik + prior.rho(rho[i-1]) + dq.rho(rho[i-1], rho.new)
+    acc = acc = min(1,exp(lacc1 - lacc2))
+    paste0("acceptance prob", acc)
+    if (runif(1)<acc){
+      rho[i] = rho.new
+      mod.curr = mod.new
+      mlik[i] = mod.new$mlik
+      acc.vec[i] = T
+    }else{ 
       rho[i] = rho[i-1]
-      if (i > burnin){
-        intercept = intercept + mod1$intercept
-        INC = INC + mod1$INC
-        HOVAL = HOVAL + mod1$HOVAL
-        tau = tau + mod1$tau
-      }
-    }else if (i > burnin){
-      intercept = intercept + mod2$intercept
-      INC = INC + mod2$INC
-      HOVAL = HOVAL + mod2$HOVAL
-      tau = tau + mod2$tau
+      mlik[i] = mlik[i-1]
+      acc.vec[i] = F
+    }
+    if(i == n.burnin){
+      intercept$x = dist.init(x = mod.curr$intercept[,"x"])
+      INC$x = dist.init(x = mod.curr$INC[,"x"])
+      HOVAL$x = dist.init(x = mod.curr$HOVAL[,"x"])
+      tau$x = dist.init(x = mod.curr$tau[,"x"])
+    }else if(i > n.burnin){
+      intercept = moving.marginals(new.marginal = mod.curr$intercept,
+                               avg.marginal = intercept,
+                               n = i-n.burnin)
+      INC = moving.marginals(new.marginal = mod.curr$INC,
+                               avg.marginal = INC,
+                               n = i-n.burnin)
+      HOVAL = moving.marginals(new.marginal = mod.curr$HOVAL,
+                               avg.marginal = HOVAL,
+                               n = i-n.burnin)
+      tau = moving.marginals(new.marginal = mod.curr$tau,
+                             avg.marginal = tau,
+                             n = i-n.burnin)
     }
   }
   return(list(rho=rho,
-              intercept = intercept/(N-burnin), 
-              INC = INC/(N-burnin), 
-              HOVAL = HOVAL/(N-burnin),
-              tau = tau/(N-burnin),
-              acc.prob = sapply(exp(acc.prob),min,1)))
+              intercept =intercept, 
+              INC = INC, 
+              HOVAL = HOVAL,
+              tau = tau,
+              acc.vec = acc.vec))
 }
 
-mod <- sem.mcmc.w.inla(columbus)
+mod <- sem.mcmc.w.inla(columbus,n.samples = 100000, n.burnin = 500)
 save(mod, file = "sem-mcmc-w-inla.Rdata")
 
