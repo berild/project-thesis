@@ -83,11 +83,12 @@ $RECYCLE.BIN/
 # latex
 **/*.aux
 **/*.fdb_latexmk
-**/*.fls"
+**/*.fls
 **/*.log
-**/*0.out
+**/*.out
 **/*.synctex.gz
 **/*.toc
+**/*.synctex(busy)
 
 # Windows shortcuts
 *.lnk
