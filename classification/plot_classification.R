@@ -22,10 +22,19 @@ stats = data.frame(key = levels(post.marg$key),
                                  function (X){
                                    mod$post.marg[[X]][which.max(mod$post.marg[[X]][,2]),1]
                                  }))
-                   
+
+num.integral <- function(df){
+  res = 0
+  for(i in seq(2,nrow(df))){
+    res = res + (df[i,1]-df[i-1,1])*(df[i,2]+df[i-1,2])*0.5
+  }
+  res
+}
+
+num.integral(mod$post.marg[[4]])
 
 dists =data.frame(x = seq(min(faithful$eruptions),max(faithful$eruptions),0.1),
-                  y1 = snorm(seq(min(faithful$eruptions),max(faithful$eruptions),0.1), 
+                  y1 = dnorm(seq(min(faithful$eruptions),max(faithful$eruptions),0.1), 
                              mean = stats$mean[1], 
                              sd = stats$mean[3]),
                   y2 = dnorm(seq(min(faithful$eruptions),max(faithful$eruptions),0.1),
