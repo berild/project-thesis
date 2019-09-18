@@ -83,7 +83,7 @@ prior.z <- function(z, log = TRUE) {
 }
 
 
-moving.marginals <- function(marg, post.marg, n){
+moving.marginals <- function(marg, mlik, post.marg, n){
   for (i in seq(length(post.marg))){
     tmp.post.marg = post.marg[[i]]
     tmp.marg = marg[[i]]
@@ -106,7 +106,7 @@ moving.marginals <- function(marg, post.marg, n){
     }
     tmp.post.marg = data.frame(x = new.x, y = new.y)
     tmp = inla.dmarginal(tmp.post.marg[,1], tmp.marg, log = FALSE)
-    tmp.post.marg[,2] = (tmp + (n-1)*tmp.post.marg[,2])/n
+    tmp.post.marg[,2] = (tmp*exp(mlik) + (n-1)*tmp.post.marg[,2])/n
     post.marg[[i]] = tmp.post.marg
   }
   post.marg
@@ -140,9 +140,11 @@ classification.mcmc.w.inla <- function(data, grp, n.samples = 100, n.burnin = 5,
       acc.vec[i] = F
     }
     if (n.burnin == i){
-      post.marg = grp.curr$m$dists
+      post.marg = grp.curr$m$dists*grp.curr$m$mlik
     }else if (i > n.burnin){
-      post.marg = moving.marginals(grp.curr$m$dists,post.marg,n = i-n.burnin + 1)
+      post.marg = moving.marginals(grp.curr$m$dists,
+                                   grp.curr$m$mlik,
+                                   post.marg,n = i-n.burnin + 1)
     }
   }
   return(list(z = z,
