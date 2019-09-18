@@ -1,6 +1,7 @@
 library(MASS)#For 'geyser' dataset
 library(MCMCpack)#For dirichlet distribution
 library(INLA)
+INLA:::inla.dynload.workaround()
 library(parallel)
 options(mc.cores = 2)
 
@@ -12,76 +13,44 @@ n.grp <- 2
 grp <- rep(2, n)
 grp[order(yy)[1:floor(n/3)]] <- 1
 
-fit.inla <- function(yy, grp) {
-  return(grp$m)
-}
 
 fit.inla.internal <- function(yy, grp) {
-  
-  #Data in two-column format
-  y <- matrix(NA, ncol = n.grp, nrow = n)
+  y = matrix(NA, ncol = n.grp, nrow = n)
   for(i in 1:n.grp) {
-    idx <- which(grp == i)
-    y[idx, i] <- yy[idx]
+    idx = which(grp == i)
+    y[idx, i] = yy[idx]
   }
-  
-  #X stores the intercept in the model
-  x <- y
-  x[!is.na(x)] <- 1
-  
-  d <- list(y = y, x = x)
-  
-  #Initial group
-  m1 <- inla(y ~ -1 + x, data = d,
+  x = y
+  x[!is.na(x)] = 1
+  d = list(y = y, x = x)
+  m1 = inla(y ~ -1 + x, data = d,
              family = rep("gaussian", n.grp),
              control.fixed = list(mean = list(x1 = 2, x2 = 4.5), prec = 1)
   )
-  
-  
-  res<- list(model = m1, mlik = m1$mlik[1, 1])
-  return(res)
+  return(list(means = m1$summary.fixed[, "mean"],
+              precs = m1$summary.hyperpar[, "mean"], 
+              mlik = m1$mlik[[1]],
+              dists = list(mu1 = as.data.frame(m1$marginals.fixed[[1]]),
+                           mu2 = as.data.frame(m1$marginals.fixed[[2]]),
+                           tau1 = as.data.frame(m1$marginals.hyperpar[[1]]),
+                           tau2 = as.data.frame(m1$marginals.hyperpar[[2]]))))
 }
 
-
-
-#Completely at random
-#x --> y
-dq.z <- function(x, y, log = TRUE) {
-  res <- log(0.5) * length(x)
-  if(log) {
-    return(res)
-  }
-  else {
-    return(exp(res))
-  }
-}
-
-rq.z <- function(z) {
-  return(sample(1:n.grp, length(z), rep = TRUE))
-}
-
-#Probabilities of belonging to each group
 get.probs <- function(z) {
-  probs <- rep(0, n.grp)
-  tab <- table(z) #+ 1 #Dirichlet prior
-  probs[as.integer(names(tab))] <- tab/sum(tab)
+  probs = rep(0, n.grp)
+  tab = table(z)
+  probs[as.integer(names(tab))] = tab/sum(tab)
   return(probs)
 }
 
-#Using means of conditional marginals
-#FIXME: We do not consider possble label switching here
 dq.z <- function(x, y, log = TRUE) {
-  m.aux <- x$m$model #fit.inla(yy, x)$model
-  means <- m.aux$summary.fixed[, "mean"]
-  precs <- m.aux$summary.hyperpar[, "mean"]
-  
-  ww <- get.probs(x$z)
-  
-  z.probs <- sapply(1:n, function (X) {
-    aux <- ww * dnorm(yy[X], means, sqrt(1/precs))
+  means = x$m$means
+  precs = x$m$means
+  ww = get.probs(x$z)
+  z.probs = sapply(1:n, function (X) {
+    aux = ww * dnorm(yy[X], means, sqrt(1/precs))
     (aux/sum(aux))[y$z[X]]
   })
-  
   if(log) {
     return(sum(log(z.probs)))
   } else {
@@ -89,30 +58,21 @@ dq.z <- function(x, y, log = TRUE) {
   }
 }
 
-#FIXME: We do not consider possible label switching here
 rq.z <- function(z) {
-  m.aux <- z$m$model #fit.inla(yy, z)$model#model.cur #
-  means <- m.aux$summary.fixed[, "mean"]
-  precs <- m.aux$summary.hyperpar[, "mean"]
-  
-  probs <- get.probs(z$z)
-  
-  z.sim <- sapply(1:n, function (X) {
-    aux <- probs * dnorm(yy[X], means, sqrt(1/precs))
+  means = z$m$means
+  precs = z$m$precs
+  probs = get.probs(z$z)
+  z.sim = sapply(1:n, function (X) {
+    aux = probs * dnorm(yy[X], means, sqrt(1/precs))
     sample(1:n.grp, 1, prob = aux/sum(aux))
   })
-  
-  #Fit model
-  z.model <- fit.inla.internal(yy, z.sim)
-  
-  #Ne value
-  z.new <- list(z = z.sim, m = z.model)#, w = ww)
+  z.model = fit.inla.internal(yy, z.sim)
+  z.new = list(z = z.sim, m = z.model)
   return(z.new)
 }
 
 
 prior.z <- function(z, log = TRUE) {
-  
   res <- log(0.5) * length(z$z)
   if(log) {
     return(res)
@@ -122,8 +82,75 @@ prior.z <- function(z, log = TRUE) {
   }
 }
 
-grp.init <- list(z = grp, m = fit.inla.internal(yy, grp),
-                 w = as.vector((table(grp) + 1) /(n + n.grp))
-)
 
-grp.init <- rq.z(grp.init)
+moving.marginals <- function(marg, post.marg, n){
+  for (i in seq(length(post.marg))){
+    tmp.post.marg = post.marg[[i]]
+    tmp.marg = marg[[i]]
+    step = tmp.post.marg[2,1] - tmp.post.marg[1,1]
+    new.x = tmp.post.marg[,1]
+    new.y = tmp.post.marg[,2]
+    if (max(tmp.marg[,1])>max(new.x)){
+      new.u = seq(from = max(new.x) + step,
+                  to = max(tmp.marg[,1])+ step,
+                  by = step)
+      new.x = c(new.x, new.u)
+      new.y = c(new.y,rep(0,length(new.u)))
+    }
+    if (min(tmp.marg[,1])<min(new.x)){
+      new.l = seq(from = min(new.x) - step,
+                  to = min(tmp.marg[,1]) - step,
+                  by = - step)
+      new.x = c(rev(new.l), new.x)
+      new.y = c(rep(0,length(new.l)),new.y)
+    }
+    tmp.post.marg = data.frame(x = new.x, y = new.y)
+    tmp = inla.dmarginal(tmp.post.marg[,1], tmp.marg, log = FALSE)
+    tmp.post.marg[,2] = (tmp + (n-1)*tmp.post.marg[,2])/n
+    post.marg[[i]] = tmp.post.marg
+  }
+  post.marg
+}
+
+
+classification.mcmc.w.inla <- function(data, grp, n.samples = 100, n.burnin = 5, n.thin = 1){
+  grp.curr = list(z = grp, m = fit.inla.internal(yy, grp))
+  grp.curr = rq.z(grp.curr)
+  mlik = numeric(n.samples)
+  acc.vec = numeric(n.samples)
+  z = matrix(NA,nrow=n.samples,ncol=length(grp))
+  z[1,] = grp.curr$z
+  mlik[1] = grp.curr$m$mlik
+  pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
+  for (i in seq(2, n.samples)){
+    setTxtProgressBar(pb, i)
+    grp.new = rq.z(grp.curr)
+    lacc1 = grp.new$m$mlik + prior.z(grp.new) + dq.z(grp.new, grp.curr)
+    lacc2 = grp.curr$m$mlik + prior.z(grp.curr) + dq.z(grp.curr, grp.new)
+    acc = min(1,exp(lacc1 - lacc2))
+    if (runif(1) < acc){
+      z[i,] = grp.new$z
+      grp.curr = grp.new
+      mlik[i] = grp.new$m$mlik
+      acc.vec[i] = T
+      
+    }else{
+      z[i,] = z[i-1,]
+      mlik[i] = mlik[i-1]
+      acc.vec[i] = F
+    }
+    if (n.burnin == i){
+      post.marg = grp.curr$m$dists
+    }else if (i > n.burnin){
+      post.marg = moving.marginals(grp.curr$m$dists,post.marg,n = i-n.burnin + 1)
+    }
+  }
+  return(list(z = z,
+              z.probs = apply(z,2,get.probs),
+              acc.vec = acc.vec,
+              post.marg = post.marg,
+              mlik = mlik))
+}
+
+mod = classification.mcmc.w.inla(faithful$eruptions,grp,n.samples = 100000, n.burnin = 500, n.thin = 1)
+save(mod, file = "./classification/classification-mcmc-w-inla.Rdata")

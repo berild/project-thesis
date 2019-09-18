@@ -1,22 +1,26 @@
-rho = data.frame(rho = mod$rho)
-rho2 =data.frame(rho = rho[-seq(50000),])
-intercept = as.data.frame(mod$intercept)
-INC = as.data.frame(mod$INC)
-HOVAL = as.data.frame(mod$HOVAL)
-tau = as.data.frame(mod$tau)
+# McMC with INLA results
+load(file = "./sem/sem-mcmc-w-inla.Rdata")
+rho = data.frame(x = mod$rho)
 
-ggplot(rho2, aes(x = rho)) + 
-  geom_density()
+post.marg <- data.frame(x = c(mod$intercept$x,
+                              mod$INC$x,
+                              mod$HOVAL$x,
+                              mod$tau$x),
+                        y = c(mod$intercept$y,
+                              mod$INC$y,
+                              mod$HOVAL$y,
+                              mod$tau$y),
+                        key = c(rep("intercept",length(mod$intercept$x)),
+                                rep("INC",length(mod$INC$x)),
+                                rep("HOVAL",length(mod$HOVAL$x)),
+                                rep("tau",length(mod$tau$x))))
 
 
-ggplot(INC, aes(x = x, y = y)) + 
-  geom_line()
+ggplot(rho, aes(x = x)) + 
+  geom_density(color = "deepskyblue", fill = "deepskyblue", alpha = 0.3)
 
-ggplot(HOVAL, aes(x = x, y = y)) + 
-  geom_line()
+ggplot(post.marg, aes(x = x, y = y)) + 
+  geom_line(color = "deepskyblue") + 
+  facet_wrap(.~key,scales = "free", ncol = 2)
 
-ggplot(tau, aes(x = x, y = y)) + 
-  geom_line()
-
-ggplot(intercept, aes(x = x, y = y)) + 
-  geom_line()
+mean(mod$acc.vec)
