@@ -80,6 +80,15 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
+# latex
+**/*.aux
+**/*.fdb_latexmk
+**/*.fls"
+**/*.log
+**/*0.out
+**/*.synctex.gz
+**/*.toc
+
 # Windows shortcuts
 *.lnk
 
