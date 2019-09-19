@@ -120,5 +120,5 @@ sem.mcmc.w.inla <- function(data, n.samples = 100, n.burnin = 5, n.thin = 1){
 }
 
 mod <- sem.mcmc.w.inla(columbus,n.samples = 100000, n.burnin = 500)
-save(mod, file = "sem-mcmc-w-inla.Rdata")
+save(mod, file = "./sem/sem-mcmc-w-inla.Rdata")
 
