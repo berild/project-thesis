@@ -89,6 +89,8 @@ $RECYCLE.BIN/
 **/*.synctex.gz
 **/*.toc
 **/*.synctex(busy)
+**/*.bcf
+**/*.run.xml
 
 # Windows shortcuts
 *.lnk
