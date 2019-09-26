@@ -39,28 +39,33 @@ dist.init <- function(x,n.step = 100){
 }
 
 
-moving.marginals <- function(new.marginal, avg.marginal, n){
-  step = avg.marginal$x[2] - avg.marginal$x[1]
-  new.x = avg.marginal$x
-  new.y = avg.marginal$y
-  if (max(new.marginal[,"x"])>max(new.x)){
-    new.u = seq(from = max(new.x) + step,
-                to = max(new.marginal[,"x"])+ step,
-                by = step)
-    new.x = c(new.x, new.u)
-    new.y = c(new.y,rep(0,length(new.u)))
+moving.marginals <- function(marg, post.marg, n){
+  for (i in seq(length(post.marg))){
+    tmp.post.marg = post.marg[[i]]
+    tmp.marg = marg[[i]]
+    step = tmp.post.marg[2,1] - tmp.post.marg[1,1]
+    new.x = tmp.post.marg[,1]
+    new.y = tmp.post.marg[,2]
+    if (max(tmp.marg[,1])>max(new.x)){
+      new.u = seq(from = max(new.x) + step,
+                  to = max(tmp.marg[,1])+ step,
+                  by = step)
+      new.x = c(new.x, new.u)
+      new.y = c(new.y,rep(0,length(new.u)))
+    }
+    if (min(tmp.marg[,1])<min(new.x)){
+      new.l = seq(from = min(new.x) - step,
+                  to = min(tmp.marg[,1]) - step,
+                  by = - step)
+      new.x = c(rev(new.l), new.x)
+      new.y = c(rep(0,length(new.l)),new.y)
+    }
+    tmp.post.marg = data.frame(x = new.x, y = new.y)
+    tmp = inla.dmarginal(tmp.post.marg[,1], tmp.marg, log = FALSE)
+    tmp.post.marg[,2] = (tmp + (n-1)*tmp.post.marg[,2])/n
+    post.marg[[i]] = tmp.post.marg
   }
-  if (min(new.marginal[,"x"])<min(new.x)){
-    new.l = seq(from = min(new.x) - step,
-                to = min(new.marginal[,"x"]) - step,
-                by = - step)
-    new.x = c(rev(new.l), new.x)
-    new.y = c(rep(0,length(new.l)),new.y)
-  }
-  avg.marginal = data.frame(x = new.x, y = new.y)
-  tmp = inla.dmarginal(avg.marginal$x, new.marginal, log = FALSE)
-  avg.marginal$y = (tmp + (n-1)*avg.marginal$y)/n
-  avg.marginal
+  post.marg
 }
 
 linreg.mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 5, n.thin = 1){

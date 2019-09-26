@@ -15,11 +15,11 @@ fit.inla <- function(data, x.mis) {
   res <- inla(chl ~ 1 + bmi + age, data = data)
   
   return(list(mlik = res$mlik[[1]], 
-              beta0 = res$marginals.fixed[[1]], 
-              beta1 = res$marginals.fixed[[2]],
-              beta2 = res$marginals.fixed[[3]],
-              beta3 = res$marginals.fixed[[4]],
-              tau = res$marginals.hyperpar[[1]]))
+              dists = list(beta0 = res$marginals.fixed[[1]], 
+                           beta1 = res$marginals.fixed[[2]],
+                           beta2 = res$marginals.fixed[[3]],
+                           beta3 = res$marginals.fixed[[4]],
+                           tau = res$marginals.hyperpar[[1]])))
 }
 
 
@@ -56,29 +56,33 @@ dist.init <- function(x,n.step = 100){
   seq(from = lx - step, to = ux + step, by = (ux - lx)/(n.step-1))
 }
 
-
-moving.marginals <- function(new.marginal, avg.marginal, n){
-  step = avg.marginal$x[2] - avg.marginal$x[1]
-  new.x = avg.marginal$x
-  new.y = avg.marginal$y
-  if (max(new.marginal[,"x"])>max(new.x)){
-    new.u = seq(from = max(new.x) + step,
-                to = max(new.marginal[,"x"])+ step,
-                by = step)
-    new.x = c(new.x, new.u)
-    new.y = c(new.y,rep(0,length(new.u)))
+moving.marginals <- function(marg, post.marg, n){
+  for (i in seq(length(post.marg))){
+    tmp.post.marg = post.marg[[i]]
+    tmp.marg = marg[[i]]
+    step = tmp.post.marg[2,1] - tmp.post.marg[1,1]
+    new.x = tmp.post.marg[,1]
+    new.y = tmp.post.marg[,2]
+    if (max(tmp.marg[,1])>max(new.x)){
+      new.u = seq(from = max(new.x) + step,
+                  to = max(tmp.marg[,1])+ step,
+                  by = step)
+      new.x = c(new.x, new.u)
+      new.y = c(new.y,rep(0,length(new.u)))
+    }
+    if (min(tmp.marg[,1])<min(new.x)){
+      new.l = seq(from = min(new.x) - step,
+                  to = min(tmp.marg[,1]) - step,
+                  by = - step)
+      new.x = c(rev(new.l), new.x)
+      new.y = c(rep(0,length(new.l)),new.y)
+    }
+    tmp.post.marg = data.frame(x = new.x, y = new.y)
+    tmp = inla.dmarginal(tmp.post.marg[,1], tmp.marg, log = FALSE)
+    tmp.post.marg[,2] = (tmp + (n-1)*tmp.post.marg[,2])/n
+    post.marg[[i]] = tmp.post.marg
   }
-  if (min(new.marginal[,"x"])<min(new.x)){
-    new.l = seq(from = min(new.x) - step,
-                to = min(new.marginal[,"x"]) - step,
-                by = - step)
-    new.x = c(rev(new.l), new.x)
-    new.y = c(rep(0,length(new.l)),new.y)
-  }
-  avg.marginal = data.frame(x = new.x, y = new.y)
-  tmp = inla.dmarginal(avg.marginal$x, new.marginal, log = FALSE)
-  avg.marginal$y = (tmp + (n-1)*avg.marginal$y)/n
-  avg.marginal
+  post.marg
 }
 
 missing.mcmc.w.inla <- function(data, n.mis,idx.mis, n.samples = 100, n.burnin = 5, n.thin = 1){
@@ -91,11 +95,6 @@ missing.mcmc.w.inla <- function(data, n.mis,idx.mis, n.samples = 100, n.burnin =
   x.mis[1,] = rep(mu,n.mis)
   mod.curr = fit.inla(data,x.mis[1,])
   mlik[1] = mod.curr$mlik
-  beta0 = data.frame(x = rep(0,102), y = rep(0,102))
-  beta1 = data.frame(x = rep(0,102), y = rep(0,102))
-  beta2 = data.frame(x = rep(0,102), y = rep(0,102))
-  beta3 =data.frame(x = rep(0,102), y = rep(0,102))
-  tau = data.frame(x = rep(0,102), y = rep(0,102))
   pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
   for (i in seq(2,n.samples)){
     setTxtProgressBar(pb, i)
@@ -103,7 +102,7 @@ missing.mcmc.w.inla <- function(data, n.mis,idx.mis, n.samples = 100, n.burnin =
     mod.new = fit.inla(data,x.mis[i,])
     lacc1 = mod.new$mlik + prior.x.mis(x.mis.new) + dq.x.mis(x.mis.new, x.mis[i-1,])
     lacc2 = mod.curr$mlik + prior.x.mis(x.mis[i-1,]) + dq.x.mis(x.mis[i-1,], x.mis.new)
-    acc = acc = min(1,exp(lacc1 - lacc2))
+    acc = min(1,exp(lacc1 - lacc2))
     if (runif(1)<acc){
       x.mis[i,] = x.mis.new
       mod.curr = mod.new
@@ -115,38 +114,18 @@ missing.mcmc.w.inla <- function(data, n.mis,idx.mis, n.samples = 100, n.burnin =
       acc.vec[i] = F
     }
     if(i == n.burnin){
-      beta0$x = dist.init(x = mod.curr$beta0[,"x"])
-      beta1$x = dist.init(x = mod.curr$beta1[,"x"])
-      beta2$x = dist.init(x = mod.curr$beta2[,"x"])
-      beta3$x = dist.init(x = mod.curr$beta3[,"x"])
-      tau$x = dist.init(x = mod.curr$tau[,"x"])
+      post.marg = mod.curr$dists
     }else if(i > n.burnin){
-      beta0 = moving.marginals(new.marginal = mod.curr$beta0,
-                             avg.marginal = beta0,
-                             n = i-n.burnin)
-      beta1 = moving.marginals(new.marginal = mod.curr$beta1,
-                             avg.marginal = beta1,
-                             n = i-n.burnin)
-      beta2 = moving.marginals(new.marginal = mod.curr$beta2,
-                             avg.marginal = beta2,
-                             n = i-n.burnin)
-      beta3 = moving.marginals(new.marginal = mod.curr$beta3,
-                             avg.marginal = beta3,
-                             n = i-n.burnin)
-      tau = moving.marginals(new.marginal = mod.curr$tau,
-                             avg.marginal = tau,
-                             n = i-n.burnin)
+      post.marg = moving.marginals(mod.curr$dists,
+                                   post.marg,
+                                   i-n.burnin+1)
     }
     
   }
   return(list(x.mis = x.mis, 
-              beta0 = beta0, 
-              beta1 = beta1,
-              beta2 = beta2,
-              beta3 = beta3,
-              tau = tau,
-              mlik = mlik,
-              acc.vec = acc.vec))
+              post.marg = post.marg,
+              acc.vec = acc.vec,
+              mlik = mlik))
 }
 
 set.seed(123)

@@ -29,7 +29,7 @@ fit.inla <- function(data, b) {
   res = inla(y ~ -1 + offset(oset), data = data)
   res = inla.rerun(res)
   return(list(mlik = res$mlik[[1]],  
-              tau = res$marginals.hyperpar[[1]]))
+              dists = list(tau = res$marginals.hyperpar[[1]])))
 }
 
 prior.beta <- function(x, mu = 0, lambda = 0.073, log = TRUE) {
@@ -56,28 +56,33 @@ dist.init <- function(x,n.step = 100){
 }
 
 
-moving.marginals <- function(new.marginal, avg.marginal, n){
-  step = avg.marginal$x[2] - avg.marginal$x[1]
-  new.x = avg.marginal$x
-  new.y = avg.marginal$y
-  if (max(new.marginal[,"x"])>max(new.x)){
-    new.u = seq(from = max(new.x) + step,
-                to = max(new.marginal[,"x"])+ step,
-                by = step)
-    new.x = c(new.x, new.u)
-    new.y = c(new.y,rep(0,length(new.u)))
+moving.marginals <- function(marg, post.marg, n){
+  for (i in seq(length(post.marg))){
+    tmp.post.marg = post.marg[[i]]
+    tmp.marg = marg[[i]]
+    step = tmp.post.marg[2,1] - tmp.post.marg[1,1]
+    new.x = tmp.post.marg[,1]
+    new.y = tmp.post.marg[,2]
+    if (max(tmp.marg[,1])>max(new.x)){
+      new.u = seq(from = max(new.x) + step,
+                  to = max(tmp.marg[,1])+ step,
+                  by = step)
+      new.x = c(new.x, new.u)
+      new.y = c(new.y,rep(0,length(new.u)))
+    }
+    if (min(tmp.marg[,1])<min(new.x)){
+      new.l = seq(from = min(new.x) - step,
+                  to = min(tmp.marg[,1]) - step,
+                  by = - step)
+      new.x = c(rev(new.l), new.x)
+      new.y = c(rep(0,length(new.l)),new.y)
+    }
+    tmp.post.marg = data.frame(x = new.x, y = new.y)
+    tmp = inla.dmarginal(tmp.post.marg[,1], tmp.marg, log = FALSE)
+    tmp.post.marg[,2] = (tmp + (n-1)*tmp.post.marg[,2])/n
+    post.marg[[i]] = tmp.post.marg
   }
-  if (min(new.marginal[,"x"])<min(new.x)){
-    new.l = seq(from = min(new.x) - step,
-                to = min(new.marginal[,"x"]) - step,
-                by = - step)
-    new.x = c(rev(new.l), new.x)
-    new.y = c(rep(0,length(new.l)),new.y)
-  }
-  avg.marginal = data.frame(x = new.x, y = new.y)
-  tmp = inla.dmarginal(avg.marginal$x, new.marginal, log = FALSE)
-  avg.marginal$y = (tmp + (n-1)*avg.marginal$y)/n
-  avg.marginal
+  post.marg
 }
 
 
@@ -89,7 +94,6 @@ lasso.mcmc.w.inla <- function(data, n.beta, stdev.samp, n.samples = 100, n.burni
   beta[1,] = rep(0,n.beta)
   mod.curr = fit.inla(data, beta[1,])
   mlik[1] = mod.curr$mlik
-  tau = data.frame(x = rep(0,102), y = rep(0,102))
   pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
   for (i in seq(2,n.samples)){
     setTxtProgressBar(pb, i)
@@ -109,16 +113,17 @@ lasso.mcmc.w.inla <- function(data, n.beta, stdev.samp, n.samples = 100, n.burni
       acc.vec[i] = F
     }
     if(i == n.burnin){
-      tau$x = dist.init(x = mod.curr$tau[,"x"])
+      post.marg = mod.curr$dists
     }else if(i > n.burnin){
-      tau = moving.marginals(new.marginal = mod.curr$tau,
-                             avg.marginal = tau,
-                             n = i-n.burnin)
+      post.marg = moving.marginals(mod.curr$dists,
+                                   post.marg,
+                                   i-n.burnin+1)
     }
   }
   return(list(beta = beta, 
-              tau = tau,
-              acc.vec = acc.vec))
+              post.marg = post.marg,
+              acc.vec = acc.vec,
+              mlik = mlik))
 }
 
 set.seed(123)

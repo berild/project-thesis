@@ -11,7 +11,7 @@
 \usepackage{tikz}
 \usepackage{xcolor,sectsty}
 \usepackage[ruled,vlined]{algorithm2e}
-\usepackage[backend=biber,style=alphabetic,citestyle=authoryear]{biblatex}
+\usepackage[backend=biber,style=phys,uniquename = false, citestyle=authoryear]{biblatex}
 
 \input{math_commands}
 \newcommand{\figref}[1]{Figure~\ref{#1}}
@@ -19,7 +19,7 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.5em}
 \renewcommand*\familydefault{\sfdefault}
-\bibliography{refrences}
+\addbibresource{references.bib}
 
 \pagestyle{headings}
 
@@ -35,8 +35,7 @@
 	\input{preface.tex}
     \tableofcontents
     \newpage
-    \pagenumbering{arabic} 
-    \cite{gomez-rubio_estimating_2017}
+    \pagenumbering{arabic}
     \input{introduction.tex}
     \input{theory.tex}
     \input{method.tex}
