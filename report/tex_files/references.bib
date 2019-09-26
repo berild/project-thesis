@@ -1,19 +1,16 @@
 
-
-
-@article{gomezrubio_multivariate_2019,
-	title = {Multivariate posterior inference for spatial models with the integrated nested Laplace approximation},
-	volume = {68},
-	issn = {1467-9876},
-	url = {https://rss.onlinelibrary.wiley.com/doi/10.1111/rssc.12292},
-	doi = {10.1111/rssc.12292},
-	abstract = {The integrated nested Laplace approximation ({INLA}) is a convenient way to obtain approximations to the posterior marginals for parameters in Bayesian hierarchical models when the latent effects can b...},
-	pages = {199--215},
-	number = {1},
-	journaltitle = {Journal of the Royal Statistical Society: Series C (Applied Statistics)},
-	author = {Gómez‐Rubio, Virgilio and Palmí‐Perales, Francisco},
-	date = {2019-01},
-	langid = {english}
+@article{lazaro_approximate_2018,
+	title = {Approximate Bayesian inference for mixture cure models},
+	url = {http://arxiv.org/abs/1806.09362},
+	abstract = {Cure models in survival analysis deal with populations in which a part of the individuals cannot experience the event of interest. Mixture cure models consider the target population as a mixture of susceptible and non-susceptible individuals. The statistical analysis of these models focuses on examining the probability of cure (incidence model) and inferring on the time-to-event in the susceptible subpopulation (latency model). Bayesian inference on mixture cure models has typically relied upon Markov chain Monte Carlo ({MCMC}) methods. The integrated nested Laplace approximation ({INLA}) is a recent and attractive approach for doing Bayesian inference. {INLA} in its natural definition cannot fit mixture models but recent research has new proposals that combine {INLA} and {MCMC} methods to extend its applicability to them (Bivand et al., 2014, G{\textbackslash}'omez-Rubio et al., 2017, G{\textbackslash}'omez-Rubio and Rue, 2018\}. This paper focuses on the implementation of {INLA} in mixture cure models. A general mixture cure survival model with covariate information for the latency and the incidence model within a general scenario with censored and non-censored information is discussed. The fact that non-censored individuals undoubtedly belong to the uncured population is a valuable information that was incorporated in the inferential process.},
+	journaltitle = {{arXiv}:1806.09362 [stat]},
+	author = {Lázaro, Elena and Armero, Carmen and Gómez-Rubio, Virgilio},
+	urldate = {2019-09-26},
+	date = {2018-06-25},
+	eprinttype = {arxiv},
+	eprint = {1806.09362},
+	keywords = {Statistics - Computation, Statistics - Methodology},
+	file = {arXiv\:1806.09362 PDF:C\:\\Users\\moutz\\Zotero\\storage\\WXHZRNA8\\Lázaro et al. - 2018 - Approximate Bayesian inference for mixture cure mo.pdf:application/pdf;arXiv.org Snapshot:C\:\\Users\\moutz\\Zotero\\storage\\R43N4TXY\\1806.html:text/html}
 }
 
 @article{gomez-rubio_spatial_2017,
@@ -27,17 +24,6 @@
 	annotation = {{arXiv}: 1702.03891}
 }
 
-@article{lazaro_approximate_2018-1,
-	title = {Approximate Bayesian inference for mixture cure models},
-	url = {http://arxiv.org/abs/1806.09362},
-	abstract = {Cure models in survival analysis deal with populations in which a part of the individuals cannot experience the event of interest. Mixture cure models consider the target population as a mixture of susceptible and non-susceptible individuals. The statistical analysis of these models focuses on examining the probability of cure (incidence model) and inferring on the time-to-event in the susceptible subpopulation (latency model). Bayesian inference on mixture cure models has typically relied upon Markov chain Monte Carlo ({MCMC}) methods. The integrated nested Laplace approximation ({INLA}) is a recent and attractive approach for doing Bayesian inference. {INLA} in its natural definition cannot fit mixture models but recent research has new proposals that combine {INLA} and {MCMC} methods to extend its applicability to them (Bivand et al., 2014, G{\textbackslash}textbackslash'omez-Rubio et al., 2017, G{\textbackslash}textbackslash'omez-Rubio and Rue, 2018{\textbackslash}vphantom\{\}. This paper focuses on the implementation of {INLA} in mixture cure models. A general mixture cure survival model with covariate information for the latency and the incidence model within a general scenario with censored and non-censored information is discussed. The fact that non-censored individuals undoubtedly belong to the uncured population is a valuable information that was incorporated in the inferential process.},
-	journaltitle = {{arXiv}:1806.09362 [stat]},
-	author = {Lázaro, Elena and Armero, Carmen and Gómez-Rubio, Virgilio},
-	date = {2018-06},
-	keywords = {Statistics - Computation, Statistics - Methodology},
-	annotation = {{arXiv}: 1806.09362}
-}
-
 @article{gomez-rubio_mixture_2017,
 	title = {Mixture model fitting using conditional models and modal Gibbs sampling},
 	url = {http://arxiv.org/abs/1712.09566},
@@ -47,6 +33,34 @@
 	date = {2017-12},
 	keywords = {Statistics - Computation, Statistics - Methodology},
 	annotation = {{arXiv}: 1712.09566}
+}
+
+@article{gomez-rubio_estimating_2017,
+	title = {Estimating Spatial Econometrics Models with Integrated Nested Laplace Approximation},
+	url = {http://arxiv.org/abs/1703.01273},
+	abstract = {Integrated Nested Laplace Approximation provides a fast and effective method for marginal inference on Bayesian hierarchical models. This methodology has been implemented in the R-{INLA} package which permits {INLA} to be used from within R statistical software. Although {INLA} is implemented as a general methodology, its use in practice is limited to the models implemented in the R-{INLA} package. Spatial autoregressive models are widely used in spatial econometrics but have until now been missing from the R-{INLA} package. In this paper, we describe the implementation and application of a new class of latent models in {INLA} made available through R-{INLA}. This new latent class implements a standard spatial lag model, which is widely used and that can be used to build more complex models in spatial econometrics. The implementation of this latent model in R-{INLA} also means that all the other features of {INLA} can be used for model fitting, model selection and inference in spatial econometrics, as will be shown in this paper. Finally, we will illustrate the use of this new latent model and its applications with two datasets based on Gaussian and binary outcomes.},
+	journaltitle = {{arXiv}:1703.01273 [stat]},
+	author = {Gomez-Rubio, Virgilio and Bivand, Roger S. and Rue, Håvard},
+	date = {2017-03},
+	keywords = {Statistics - Computation},
+	annotation = {{arXiv}: 1703.01273}
+}
+
+@article{gomezrubio_multivariate_2019,
+	title = {Multivariate posterior inference for spatial models with the integrated nested Laplace approximation},
+	volume = {68},
+	issn = {1467-9876},
+	url = {https://rss.onlinelibrary.wiley.com/doi/10.1111/rssc.12292},
+	doi = {10.1111/rssc.12292},
+	abstract = {The integrated nested Laplace approximation ({INLA}) is a convenient way to obtain approximations to the posterior marginals for parameters in Bayesian hierarchical models when the latent effects can b...},
+	pages = {199--215},
+	number = {1},
+	journaltitle = {Journal of the Royal Statistical Society: Series C (Applied Statistics)},
+	author = {Gómez‐Rubio, Virgilio and Palmí‐Perales, Francisco},
+	urldate = {2019-09-25},
+	date = {2019-01-01},
+	langid = {english},
+	file = {Snapshot:C\:\\Users\\moutz\\Zotero\\storage\\WJ2C5F39\\Gómez‐Rubio and Palmí‐Perales - 2019 - Multivariate posterior inference for spatial model.html:text/html}
 }
 
 @article{rue_approximate_2009,
@@ -59,6 +73,7 @@
 	number = {2},
 	journaltitle = {Journal of the Royal Statistical Society. Series B (Statistical Methodology)},
 	author = {Rue, Håvard and Martino, Sara and Chopin, Nicolas},
+	urldate = {2019-09-05},
 	date = {2009}
 }
 
@@ -73,7 +88,9 @@
 	number = {1},
 	journaltitle = {Biometrika},
 	author = {Hastings, W. K.},
-	date = {1970}
+	urldate = {2019-09-05},
+	date = {1970},
+	file = {JSTOR Full Text PDF:C\:\\Users\\moutz\\Zotero\\storage\\RUC3VPX3\\Hastings - 1970 - Monte Carlo Sampling Methods Using Markov Chains a.pdf:application/pdf}
 }
 
 @article{hoeting_bayesian_1999,
@@ -87,18 +104,8 @@
 	number = {4},
 	journaltitle = {Statistical Science},
 	author = {Hoeting, Jennifer A. and Madigan, David and Raftery, Adrian E. and Volinsky, Chris T.},
+	urldate = {2019-09-05},
 	date = {1999}
-}
-
-@article{gomez-rubio_estimating_2017,
-	title = {Estimating Spatial Econometrics Models with Integrated Nested Laplace Approximation},
-	url = {http://arxiv.org/abs/1703.01273},
-	abstract = {Integrated Nested Laplace Approximation provides a fast and effective method for marginal inference on Bayesian hierarchical models. This methodology has been implemented in the R-{INLA} package which permits {INLA} to be used from within R statistical software. Although {INLA} is implemented as a general methodology, its use in practice is limited to the models implemented in the R-{INLA} package. Spatial autoregressive models are widely used in spatial econometrics but have until now been missing from the R-{INLA} package. In this paper, we describe the implementation and application of a new class of latent models in {INLA} made available through R-{INLA}. This new latent class implements a standard spatial lag model, which is widely used and that can be used to build more complex models in spatial econometrics. The implementation of this latent model in R-{INLA} also means that all the other features of {INLA} can be used for model fitting, model selection and inference in spatial econometrics, as will be shown in this paper. Finally, we will illustrate the use of this new latent model and its applications with two datasets based on Gaussian and binary outcomes.},
-	journaltitle = {{arXiv}:1703.01273 [stat]},
-	author = {Gomez-Rubio, Virgilio and Bivand, Roger S. and Rue, Håvard},
-	date = {2017-03},
-	keywords = {Statistics - Computation},
-	annotation = {{arXiv}: 1703.01273}
 }
 
 @article{gomez-rubio_markov_2018,
@@ -111,10 +118,13 @@
 	pages = {1033--1051},
 	number = {5},
 	journaltitle = {Statistics and Computing},
+	shortjournal = {Stat Comput},
 	author = {Gómez-Rubio, Virgilio and Rue, Håvard},
-	date = {2018-09},
+	urldate = {2019-09-05},
+	date = {2018-09-01},
 	langid = {english},
-	keywords = {Bayesian Lasso, {INLA}, {MCMC}, Missing values, Mixture models, Spatial models}
+	keywords = {Bayesian Lasso, {INLA}, {MCMC}, Missing values, Mixture models, Spatial models},
+	file = {Springer Full Text PDF:C\:\\Users\\moutz\\Zotero\\storage\\ZZMBT4IJ\\Gómez-Rubio and Rue - 2018 - Markov chain Monte Carlo with the Integrated Neste.pdf:application/pdf}
 }
 
 @article{bivand_approximate_2014,
@@ -127,7 +137,10 @@
 	abstract = {In this paper we explore the use of the Integrated Laplace Approximation ({INLA}) for Bayesian inference in some widely used models in Spatial Econometrics. Bayesian inference often relies on computationally intensive simulation methods, such as Markov Chain Monte Carlo. When only marginal inference is needed, {INLA} provides a fast and accurate estimate of the posterior marginals of the parameters in the model. Furthermore, we have compared the results provided by these models to those obtained with a more general class of Generalised Linear Models with random effects. In these models, spatial autocorrelation is modelled by means of correlated Gaussian random effects. We also discuss a procedure to extend the class of models that the R-{INLA} software can fit. This approach is based on conditioning on one or more parameters so that the resulting models can be fitted with R-{INLA} across sets of values of the fixed parameters. The posterior marginals of these parameters of interest are then obtained by combining the marginal likelihoods (which are conditioned on the values of the parameters fixed) of the fitted models and a prior on these parameters. This approach can also be used to fit even more general models. Finally, we discuss the use of all these models on two datasets based on median housing prices for census tracts in Boston and the probability of business re-opening in New Orleans in the aftermath of hurricane Katrina.},
 	pages = {146--165},
 	journaltitle = {Spatial Statistics},
+	shortjournal = {Spatial Statistics},
 	author = {Bivand, Roger S. and Gómez-Rubio, Virgilio and Rue, Håvard},
-	date = {2014-08},
-	keywords = {Bayesian inference, {INLA}, Spatial econometrics}
+	urldate = {2019-09-05},
+	date = {2014-08-01},
+	keywords = {Bayesian inference, {INLA}, Spatial econometrics},
+	file = {ScienceDirect Full Text PDF:C\:\\Users\\moutz\\Zotero\\storage\\7KMW2D89\\Bivand et al. - 2014 - Approximate Bayesian inference for spatial econome.pdf:application/pdf;ScienceDirect Snapshot:C\:\\Users\\moutz\\Zotero\\storage\\AQAQGBVM\\Bivand et al. - 2014 - Approximate Bayesian inference for spatial econome.html:text/html}
 }
