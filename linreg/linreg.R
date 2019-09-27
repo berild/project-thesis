@@ -31,14 +31,6 @@ sample.linreg <- function(){
   df = data.frame(y = y, x1 = x1, x2 = x2)
 }
 
-dist.init <- function(x,n.step = 100){
-   lx = min(x)
-   ux = max(x)
-   step = (ux - lx)/(n.step-1)
-   seq(from = lx - step, to = ux + step, by = (ux - lx)/(n.step-1))
-}
-
-
 moving.marginals <- function(marg, post.marg, n){
   for (i in seq(length(post.marg))){
     tmp.post.marg = post.marg[[i]]

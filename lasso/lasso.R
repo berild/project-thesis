@@ -48,13 +48,6 @@ rq.beta <- function(x, sigma = stdev.samp) {
   as.vector(rmvnorm(1, mean = x, sigma = sigma))
 }
 
-dist.init <- function(x,n.step = 100){
-  lx = min(x)
-  ux = max(x)
-  step = (ux - lx)/(n.step-1)
-  seq(from = lx - step, to = ux + step, by = (ux - lx)/(n.step-1))
-}
-
 
 moving.marginals <- function(marg, post.marg, n){
   for (i in seq(length(post.marg))){

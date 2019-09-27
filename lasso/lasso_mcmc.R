@@ -5,16 +5,6 @@ library(smoothmest) #Laplace distribution
 library(mvtnorm)
 
 
-
-prior.beta <- function(x, mu = 0, lambda = 1/0.73, log = TRUE) {
-  res <- sum(log(ddoublex(x, mu = mu, lambda = lambda)))
-  
-  if(!log) { res <- exp(res) }
-  
-  return(res)
-}
-
-
 data(Hitters)
 
 Hitters <- na.omit(Hitters)
@@ -29,63 +19,73 @@ x <- scale(x)
 d <- list(y = y, x = x)
 n.beta <- ncol(d$x)
 
-
-x1 <-cbind(1,x)
-ML.betas <- solve(t(x1)%*%x1)%*%t(x1)%*%y
-ML.betas
-
+# finding inverse of the precision
 stdev.samp <- .25 * solve(t(x)%*%x)
 
+
+prior.beta <- function(x, mu = 0, lambda = 0.073, log = TRUE) {
+  res <- sum(log(ddoublex(x, mu = mu, lambda = lambda)))
+  
+  if(!log) { res <- exp(res) }
+  
+  return(res)
+}
 
 dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
   dmvnorm(y, mean = x, sigma = sigma, log = log)
 }
 
 rq.beta <- function(x, sigma = stdev.samp) {
-  as.vector(rmvnorm(1, mean = y, sigma = sigma))
+  as.vector(rmvnorm(1, mean = x, sigma = sigma))
 }
+
 
 r.tau <- function(data, beta){
-  shape = 1
+  shape = 1.5
   rate = 1/(5*10^(-5)) + 
-    t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)
-  rgamma(1, shape = shape, rate = rate, scale = 1/rate)
+    t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)/2
+  rgamma(1, shape = shape, rate = rate)
 }
 
-d.y <- function(data,beta,tau,log = TRUE){
+d.beta <- function(data,beta,tau,log = TRUE){
   dmvnorm(as.numeric(data$y),
           mean = as.numeric(data$x%*%beta), 
           sigma = 1/tau*diag(length(data$y)),
           log = log) + prior.beta(beta)
 }
 
-lasso.mcmc <- function(data, n.beta){
-  N = 10000
-  beta = matrix(data = NA,nrow = N, ncol = n.beta)
-  colnames(beta) = colnames(data$x)
-  beta[1,] = rep(0,n.beta)
-  tau = c(r.tau(data,beta[1,]))
-  pb <- txtProgressBar(min = 0, max = N, style = 3)
-  acc.prob = c(0)
-  for (i in seq(2,N)){
+lasso.mcmc <- function(data, n.beta, stdev.samp, n.samples = 100, n.burnin = 5, n.thin = 1){
+  chain = list(beta = matrix(NA,nrow = n.samples, ncol = n.beta),
+               tau = numeric(n.samples),
+               acc.vec = numeric(n.samples))
+  chain$beta[1,] = rep(0,n.beta)
+  chain$tau[1] = r.tau(data, chain$beta[1,])
+  chain$acc.vec[1] = T
+  pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
+  for (i in seq(2,n.samples)){
     setTxtProgressBar(pb, i)
-    beta[i,] = rq.beta(beta[i-1,])
-    tau = c(tau, r.tau(data,beta[i-1,]))
-    acc.prob = c(acc.prob,
-                 d.y(data,beta[i,],tau[i-1]) + 
-                   dq.beta(beta[i,],beta[i-1,]) - 
-                   d.y(data,beta[i-1,],tau[i-1]) - 
-                   dq.beta(beta[i-1,], beta[i,]))
-    if (log(runif(1))>acc.prob[i-1]){
-      beta[i,] = beta[i-1,]
+    beta.new = rq.beta(chain$beta[i-1,],stdev.samp)
+    tau.new = r.tau(data,beta.new)
+    lacc1 = d.beta(data,beta.new,tau.new) + dq.beta(beta.new,chain$beta[i-1,],stdev.samp)
+    lacc2 = d.beta(data,chain$beta[i-1,],tau.new) + dq.beta(chain$beta[i-1,],beta.new,stdev.samp)
+    if (runif(1)<exp(lacc1 - lacc2)){
+      chain$beta[i,] = beta.new
+      chain$tau[i] = tau.new
+      chain$acc.vec[i] = T
+    }else{
+      chain$beta[i,] = chain$beta[i-1,]
+      chain$tau[i] = chain$tau[i-1]
+      chain$acc.vec[i] = F
     }
   }
-  return(list(beta = beta, 
-              tau = tau,
-              acc.prob = sapply(exp(acc.prob),min,1)))
+  return(chain)
 }
 
-set.seed(123)
-mod = lasso.mcmc(d, n.beta)
 
+set.seed(123)
+mod = lasso.mcmc(d, n.beta,stdev.samp,n.samples = 100000)
+
+
+
+mean(mod$beta[,1])
 save(mod, file = "./lasso/lasso-mcmc.Rdata")

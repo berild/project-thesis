@@ -1,4 +1,5 @@
 library(mice)
+library(INLA)
 
 data(nhanes2)
 
@@ -6,43 +7,73 @@ d.mis <- nhanes2
 idx.mis <- which(is.na(d.mis$bmi))
 n.mis <- length(idx.mis)
 
-dq.x.mis <- function(x, y, sigma = sqrt(0.001), log =TRUE) {
-  sum(dnorm(y, mean = x, sd = sigma, log = log))
+
+fit.inla <- function(data, x.mis) { 
+  
+  data$bmi[idx.mis] <- x.mis
+  
+  res <- inla(chl ~ 1 + bmi + age, data = data)
+  
+  return(list(mlik = res$mlik[[1]], 
+              dists = list(beta0 = res$marginals.fixed[[1]], 
+                           beta1 = res$marginals.fixed[[2]],
+                           beta2 = res$marginals.fixed[[3]],
+                           beta3 = res$marginals.fixed[[4]],
+                           tau = res$marginals.hyperpar[[1]])))
 }
 
-rq.x.mis <- function(x, sigma = sqrt(0.001)) {
+
+
+dq.x.mis <- function(x, y, sigma = sqrt(10), log =TRUE) {
+  res <- dnorm(y, mean = x, sd = sigma, log = log)
+  
+  if(log) {
+    return(sum(res))
+  } else {
+    return(prod(res))
+  }
+}
+
+rq.x.mis <- function(x, sigma = sqrt(10) ) {
   rnorm(length(x), mean = x, sd = sigma)
 }
 
 
-r.tau <- function(data, beta){
+prior.x.mis <- function(x, mu = mean(d.mis$bmi, na.rm = TRUE), 
+                        sigma = 2*sd(d.mis$bmi, na.rm = TRUE), log = TRUE) {
+  res = dnorm(x, mean = mu, sd= sigma, log = log)
+  if(log) {
+    return(sum(res))
+  } else {
+    return(prod(res))
+  }
+}
+
+r.beta <- function(data, beta, tau, sigma = 0.001){
+  std = 
+  uti = lapply(seq(length(beta)), function(x){sigma + tau*data$x})
+}
+
+
+r.tau <- function(data, beta, x.mis, idx.mis){
+  data$bmi[idx.mis] <- x.mis
   shape = 1.5
-  rate = 1/(5*10^(-5)) + t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)
+  rate = 1/(5*10^(-5)) + 
+    t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)/2
   rgamma(1, shape = shape, rate = rate)
 }
 
-d.y <- function(data,beta,tau,log = TRUE){
-  dmvnorm(as.numeric(data$y),mean = as.numeric(data$x%*%beta), sigma = 1/tau*diag(length(data$y)),log = log)*prior.beta(beta)
-}
-
-prior.x.mis <- function(x, mu = mean(d.mis$bmi, na.rm = TRUE), 
-                        sigma = 2*sd(d.mis$bmi, na.rm = TRUE), log = TRUE) {
-  sum(dnorm(x, mean = mu, sd= sigma, log = log))
-}
-
-missing.mcmc <- function(data, n.mis){
-  N = 10000
-  burnin = 500
+missing.mcmc <- function(data, n.mis,idx.mis, n.samples = 100, n.burnin = 5, n.thin = 1){
+  chain = list(x.mis = matrix(NA,nrow = n.samples, ncol = n.mis),
+               beta = matrix(NA,nrow = n.samples, ncol = 4),
+               tau = numeric(n.samples),
+               acc.vec = numeric(n.samples))
   mu = mean(data$bmi, na.rm = TRUE)
   sigma = 2*sd(data$bmi, na.rm = TRUE)
-  x.mis = matrix(data = NA,nrow = N, ncol = n.mis)
-  x.mis[1,] = rep(mean(data$bmi,na.rm = TRUE),n.mis)
-  mod1 = fit.inla(data,x.mis[1,])
-  alfa = mod1$alfa * 0
-  beta = mod1$beta * 0 
-  tau = mod1$tau * 0
-  pb <- txtProgressBar(min = 0, max = N, style = 3)
-  acc.prob = c()
+  chain$beta[1,] = rep(0,n.beta)
+  chain$tau[1] = r.tau(data, chain$beta[1,])
+  chain$acc.vec[1] = T
+  pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
   for (i in seq(2,N)){
     setTxtProgressBar(pb, i)
     x.mis[i,] = rq.x.mis(x.mis[i-1,])
