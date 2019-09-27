@@ -93,6 +93,7 @@ $RECYCLE.BIN/
 **/*.run.xml
 **/*.bbl
 **/*.blg
+**/*.pdf
 
 # Windows shortcuts
 *.lnk
