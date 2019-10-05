@@ -1,36 +1,3 @@
-library(INLA)
-library(tidyverse)
-
-rq.beta <- function(x, sigma = .75) {
-  rnorm(length(x), mean = x, sd = sigma)
-}
-
-dq.beta <- function(y, x, sigma = .75, log =TRUE) {
-  sum(dnorm(x, mean = y, sd = sigma, log = log))
-}
-
-prior.beta <- function(x, sigma = sqrt(1/.001), log = TRUE) {
-  sum(dnorm(x, mean = 0, sd= sigma, log = log))
-}
-
-
-fit.inla = function(data, beta){
-  data$oset = beta[1]*data$x1 + beta[2]*data$x2
-  res = inla(y~1+offset(oset), data = data)
-  return(list(mlik = res$mlik[1],
-              dists = list(intercept = res$marginals.fixed[[1]], 
-                          tau = res$marginals.hyperpar[[1]])))
-}
-
-sample.linreg <- function(){
-  n = 100
-  x1 = runif(n)
-  x2 = runif(n)
-  err = rnorm(n)
-  y = 3 + 2*x1 -2*x2 + err
-  df = data.frame(y = y, x1 = x1, x2 = x2)
-}
-
 moving.marginals <- function(marg, post.marg, n){
   for (i in seq(length(post.marg))){
     tmp.post.marg = post.marg[[i]]
@@ -60,30 +27,32 @@ moving.marginals <- function(marg, post.marg, n){
   post.marg
 }
 
-linreg.mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 5, n.thin = 1){
-  beta = matrix(data = NA,nrow = n.samples, ncol = 2)
+inla.w.mcmc <- function(data, init_fixed, prior.fixed, rq.fixed, dq.fixed, 
+                         fit.inla, n.samples = 100, n.burnin = 5, n.thin = 1){
+  require(INLA)
+  fixed = matrix(data = NA,nrow = n.samples, ncol = ncol(data)-1)
   mlik = numeric(n.samples)
   acc.vec = numeric(n.samples)
-  colnames(beta) = colnames(data[,-1])
-  beta[1,] = c(0,0)
-  mod.curr = fit.inla(data, beta = beta[1,])
+  colnames(fixed) = colnames(fixed[,-1])
+  fixed[1,] = init_fixed
+  mod.curr = fit.inla(data,fixed[1,])
   mlik[1] = mod.curr$mlik
   pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
   for (i in seq(2, n.samples)){
     setTxtProgressBar(pb, i)
-    beta.new = rq.beta(beta[i-1,])
-    mod.new = fit.inla(data, beta = beta.new)
-    lacc1 = mod.new$mlik + prior.beta(beta.new) + dq.beta(beta.new, beta[i-1,])
-    lacc2 = mod.curr$mlik + prior.beta(beta[i-1,]) + dq.beta(beta[i-1,], beta.new)
+    fixed.new = rq.fixed(fixed[i-1,])
+    mod.new = fit.inla(data, fixed.new)
+    lacc1 = mod.new$mlik + prior.fixed(fixed.new) + dq.fixed(fixed.new, fixed[i-1,])
+    lacc2 = mod.curr$mlik + prior.fixed(beta[i-1,]) + dq.fixed(fixed[i-1,], fixed.new)
     acc = min(1,exp(lacc1 - lacc2))
     if (runif(1) < acc){
-      beta[i,] = beta.new
+      fixed[i,] = fixed.new
       mod.curr = mod.new
       mlik[i] = mod.new$mlik
       acc.vec[i] = T
       
     }else{
-      beta[i,] = beta[i-1,]
+      fixed[i,] = fixed[i-1,]
       mlik[i] = mlik[i-1]
       acc.vec[i] = F
     }
@@ -95,19 +64,10 @@ linreg.mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 5, n.thin = 1){
                                    i-n.burnin+1)
     }
   }
-  return(list(beta = beta,
+  return(list(fixed = fixed,
               post.marg = post.marg,
               acc.vec = acc.vec,
               mlik = mlik))
 }
-
-
-set.seed(1)
-df = sample.linreg()
-mod = linreg.mcmc.w.inla(df,n.samples = 100,n.burnin = 5)
-save(mod, file = "./linreg/linreg.Rdata")
-mod_inla = inla(y~1 + x1 + x2,data = df)
-save(mod_inla, file = "./linreg/linreg_INLA.Rdata")
-
 
 

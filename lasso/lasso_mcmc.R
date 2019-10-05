@@ -42,8 +42,7 @@ rq.beta <- function(x, sigma = stdev.samp) {
 
 r.tau <- function(data, beta){
   shape = 1.5
-  rate = 1/(5*10^(-5)) + 
-    t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)/2
+  rate = 5*10^(-5) + t(data$y - data$x%*%beta)%*%(data$y - data$x%*%beta)/2
   rgamma(1, shape = shape, rate = rate)
 }
 
@@ -83,7 +82,7 @@ lasso.mcmc <- function(data, n.beta, stdev.samp, n.samples = 100, n.burnin = 5, 
 
 
 set.seed(123)
-mod = lasso.mcmc(d, n.beta,stdev.samp,n.samples = 100000)
+mod = lasso.mcmc(d, n.beta,stdev.samp,n.samples = 1000)
 
 
 
