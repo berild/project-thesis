@@ -57,6 +57,14 @@ moving.marginals <- function(marg, post.marg = NA, weight){
 }
 
 
+# implement adaptive mean and standard diviation
+# E(\beta) = \sum \beta_i*w_i
+# something for standard diviation
+# draw samples from this distribution
+# have a very vague proposal before
+
+
+
 inla.w.is <- function(data, prior, d.prop, n.prop){
   prop.space = matrix(rep(seq(-10,10,1),n.prop), 
                       nrow = n.prop)

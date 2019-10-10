@@ -34,6 +34,14 @@ sample.linreg <- function(){
 }
 
 
+# implement gibbs sampling here
+# mcmc doens't work well with this model
+# compare distributions
+# deliver results to sara
+# start work on spatial econometric models
+# setup text
+# then maybe add more
+
 linreg.mcmc <- function(data,n.samples=100,n.burnin=5,n.thin = 1){
   chain = list(alpha = numeric(n.samples),
                beta = matrix(NA,nrow = n.samples, ncol = 2),
