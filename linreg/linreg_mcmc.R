@@ -17,7 +17,6 @@ r.alpha <- function(y,x,beta,tau){
   rnorm(1, mean = sum(y - x%*%beta)/length(y), sd = 1 / sqrt(length(y)*tau))
 }
 
-
 prior.beta <- function(x, sigma = sqrt(1/.001), log = TRUE) {
   sum(dnorm(x, mean = 0, sd= sigma, log = log))
 }
@@ -25,6 +24,13 @@ prior.beta <- function(x, sigma = sqrt(1/.001), log = TRUE) {
 d.beta <- function(y,x,alpha,beta,tau,log = TRUE){
   return(dmvnorm(y, mean = alpha + x%*%beta, sigma = 1/tau*diag(length(y)), log = log) +
            prior.beta(beta))
+}
+
+r.beta <- function(y,x,alpha,tau,sig = 0.001){
+  tmp = solve(t(x)%*%x)
+  tmp2 = solve(sig*tmp+tau)
+  one = rep(1,length(y))
+  rmvnorm(1,mean = tau*tmp2%*%tmp%*%t(t(y)%*%x - alpha*t(one)%*%x), sigma = tmp2)
 }
 
 sample.linreg <- function(){
@@ -53,23 +59,28 @@ linreg.mcmc <- function(data,n.samples=100,n.burnin=5,n.thin = 1){
   pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
   for (i in seq(2,n.samples)){
     setTxtProgressBar(pb, i)
+    # chain$beta[i,] = r.beta(data$y,data$x,chain$alpha[i-1],chain$tau[i-1])
+    # chain$tau[i] = r.tau(data$y,data$x,chain$beta[i,],chain$alpha[i-1])
+    # chain$alpha[i] = r.alpha(data$y,data$x,chain$beta[i,],chain$tau[i])
+    tau.new = r.tau(data$y, data$x, chain$beta[i-1,], chain$alpha[i-1])
+    alpha.new = r.alpha(data$y, data$x, chain$beta[i-1,], chain$tau[i-1])
     beta.new = rq.beta(chain$beta[i-1,])
-    chain$tau[i] = r.tau(data$y,data$x,chain$beta[i-1,],chain$alpha[i-1])
-    chain$alpha[i] = r.alpha(data$y,data$x,chain$beta[i-1,],tau[i])
-    lacc1 = d.beta(data$y,data$x,chain$alpha[i],beta.new,chain$tau[i]) + dq.beta(beta.new,chain$beta[i-1,])
-    lacc2 = d.beta(data$y,data$x, chain$alpha[i],chain$beta[i-1,],chain$tau[i]) + dq.beta(chain$beta[i-1,],beta.new)
+    lacc1 = d.beta(data$y,data$x,alpha.new,beta.new,tau.new) + dq.beta(beta.new,chain$beta[i-1,])
+    lacc2 = d.beta(data$y,data$x, chain$alpha[i-1],chain$beta[i-1,],chain$tau[i-1]) + dq.beta(chain$beta[i-1,],beta.new)
     if (runif(1)<exp(lacc1 - lacc2)){
       chain$beta[i,] = beta.new
+      chain$alpha[i] = alpha.new
+      chain$tau[i] = tau.new
       chain$acc.vec[i] = T
     }else{
       chain$beta[i, ] = chain$beta[i-1,]
+      chain$alpha[i] = chain$alpha[i-1]
+      chain$tau[i] = chain$tau[i-1]
       chain$acc.vec[i] = F
     }
-    
   }
   return(chain)
 }
-
 
 set.seed(1)
 samps = sample.linreg()
@@ -77,6 +88,7 @@ mod = linreg.mcmc(samps,n.samples = 10000)
 
 res = data.frame(step = seq(10000),alpha = mod$alpha,beta1 = mod$beta[,1],beta2 = mod$beta[,2],tau = mod$tau)
 ggplot(res, aes(x = step)) + 
-  geom_line(aes(y = alpha))
+  geom_line(aes(y = beta1))
 
-
+ggplot(res) + 
+  geom_density(aes(x = alpha))

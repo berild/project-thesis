@@ -1,5 +1,6 @@
 library(INLA)
 library(tidyverse)
+source("inla_w_mh.R")
 
 rq.beta <- function(x, sigma = .75) {
   rnorm(length(x), mean = x, sd = sigma)
@@ -15,7 +16,7 @@ prior.beta <- function(x, sigma = sqrt(1/.001), log = TRUE) {
 
 
 fit.inla = function(data, beta){
-  data$oset = beta[1]*data$x1 + beta[2]*data$x2
+  data$oset = data$x%*%beta
   res = inla(y~1+offset(oset), data = data)
   return(list(mlik = res$mlik[1],
               dists = list(intercept = res$marginals.fixed[[1]], 
@@ -28,7 +29,7 @@ sample.linreg <- function(){
   x2 = runif(n)
   err = rnorm(n)
   y = 3 + 2*x1 -2*x2 + err
-  df = data.frame(y = y, x1 = x1, x2 = x2)
+  return(list(y = y,x = matrix(c(x1,x2),ncol = 2)))
 }
 
 moving.marginals <- function(marg, post.marg, n){
@@ -104,10 +105,14 @@ linreg.mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 5, n.thin = 1){
 
 set.seed(1)
 df = sample.linreg()
-mod = linreg.mcmc.w.inla(df,n.samples = 100,n.burnin = 5)
+mod = inla.w.mcmc(df, c(0,0), prior.beta, rq.beta, dq.beta, fit.inla, n.samples = 100, n.burnin = 5, n.thin = 1)
 save(mod, file = "./linreg/linreg.Rdata")
 mod_inla = inla(y~1 + x1 + x2,data = df)
 save(mod_inla, file = "./linreg/linreg_INLA.Rdata")
 
+ggplot(as.data.frame(mod$post.marg$intercept))+
+  geom_line(aes(x = x, y = y))
 
+ggplot(as.data.frame(mod$post.marg$tau))+
+  geom_line(aes(x = x, y = y))
 
