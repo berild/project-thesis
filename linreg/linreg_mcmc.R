@@ -54,19 +54,15 @@ linreg.mcmc <- function(data,n.samples=100,n.burnin=5,n.thin = 1){
   for (i in seq(2,n.samples)){
     setTxtProgressBar(pb, i)
     beta.new = rq.beta(chain$beta[i-1,])
-    tau.new = r.tau(data$y,data$x,beta.new,chain$alpha[i-1])
-    alpha.new = r.alpha(data$y,data$x,beta.new,tau.new)
-    lacc1 = d.beta(data$y,data$x,alpha.new,beta.new,tau.new) + dq.beta(beta.new,chain$beta[i-1,])
-    lacc2 = d.beta(data$y,data$x, chain$alpha[i-1],chain$beta[i-1,],chain$tau[i-1]) + dq.beta(chain$beta[i-1,],beta.new)
+    chain$tau[i] = r.tau(data$y,data$x,chain$beta[i-1,],chain$alpha[i-1])
+    chain$alpha[i] = r.alpha(data$y,data$x,chain$beta[i-1,],tau[i])
+    lacc1 = d.beta(data$y,data$x,chain$alpha[i],beta.new,chain$tau[i]) + dq.beta(beta.new,chain$beta[i-1,])
+    lacc2 = d.beta(data$y,data$x, chain$alpha[i],chain$beta[i-1,],chain$tau[i]) + dq.beta(chain$beta[i-1,],beta.new)
     if (runif(1)<exp(lacc1 - lacc2)){
-      chain$alpha[i] = alpha.new
       chain$beta[i,] = beta.new
-      chain$tau[i] = tau.new
       chain$acc.vec[i] = T
     }else{
-      chain$alpha[i] = chain$alpha[i-1]
       chain$beta[i, ] = chain$beta[i-1,]
-      chain$tau[i] = chain$tau[i-1]
       chain$acc.vec[i] = F
     }
     
