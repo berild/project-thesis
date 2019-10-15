@@ -1,3 +1,6 @@
+library(INLA)
+library(tidyverse)
+
 rq.beta <- function(x=c(0,0), sigma = 5) {
   rnorm(length(x), mean = x, sd = sigma)
 }
@@ -79,6 +82,10 @@ adaptive.sd2 <- function(a.sd, a.mean, new.weight, m.weight, new.eta, n){
          (new.weight/(new.weight + m.weight)*new.eta - m.weight/(new.weight + m.weight)*a.mean))
 }
 
+adaptive.sd3 <-function(a.sd, a.mean, new.weight, m.weight, new.eta){
+  sqrt(m.weight^2/(new.weight + m.weight)^2*a.sd^2 + new.weight^2/(new.weight + m.weight)^2*t(new.eta - a.mean)%*%(new.eta - a.mean))
+}
+
 
 inla.w.is <- function(data, init, prior, d.prop, r.prop, n.prop,target.sd = 1){
   mlik = numeric(n.prop)
@@ -95,9 +102,10 @@ inla.w.is <- function(data, init, prior, d.prop, r.prop, n.prop,target.sd = 1){
     eta[i,] = r.prop(a.mean, sigma = a.sd)
     mod = fit.inla(data,eta[i,])
     mlik[i] = mod$mlik
-    weight[i] = exp(mlik[i] + prior(eta[i,]) - d.prop(eta[i,], a.mean, sigma = a.sd))
-    a.sd = adaptive.sd2(a.sd,a.mean,weight[i], m.weight, eta[i,], n)
+    weight[i] = exp(mlik[i]) #+ prior(eta[i,]) - d.prop(eta[i,], a.mean, sigma = a.sd))
+    #a.sd = adaptive.sd2(a.sd,a.mean,weight[i], m.weight, eta[i,], n)
     #a.sd = adaptive.sd(a.sd, weight[i], m.weight,target.sd)
+    a.sd = adaptive.sd3(a.sd, a.mean, weight[i], m.weight, eta[i,])
     a.mean = adaptive.mean(a.mean, weight[i], m.weight, eta[i,])
     post.marg = self.norm.imp.samp(mod$dists,post.marg,weight[i],m.weight)
     m.weight = m.weight + weight[i]
@@ -124,7 +132,6 @@ set.seed(1)
 df = sample.linreg()
 mod = inla.w.is(df,init = c(0,0), prior.beta, dq.beta, rq.beta, n.prop = 500)
 
-
 ggplot(as.data.frame(mod$post.marg$intercept)) + 
   geom_line(aes(x = x, y = y))
 
@@ -142,3 +149,4 @@ mod$eta
 mod$weight
 mod$a.mean
 mod$a.sd
+
