@@ -1,12 +1,13 @@
 library(INLA)
 library(tidyverse)
+library(mvtnorm)
 
-rq.beta <- function(x=c(0,0), sigma = 5) {
-  rnorm(length(x), mean = x, sd = sigma)
+rq.beta <- function(x=c(0,0), sigma = diag(5,2,2)) {
+  rmvnorm(1,mean=x,sigma = sigma)
 }
 
-dq.beta <- function(y, x, sigma = 5, log =TRUE) {
-  sum(dnorm(y, mean = x, sd = sigma, log = log))
+dq.beta <- function(y, x, sigma = diag(5,2,2), log =TRUE) {
+  dmvnorm(y,mean = x, sigma = sigma,log = log)
 }
 
 prior.beta <- function(x, sigma = sqrt(1/.001), log = TRUE) {
@@ -86,36 +87,69 @@ adaptive.sd3 <-function(a.sd, a.mean, new.weight, m.weight, new.eta){
   sqrt(m.weight^2/(new.weight + m.weight)^2*a.sd^2 + new.weight^2/(new.weight + m.weight)^2*t(new.eta - a.mean)%*%(new.eta - a.mean))
 }
 
+calc.var <- function(a.mean,weight,eta){
+  new.var = matrix(NA,ncol = length(a.mean), nrow = length(a.mean))
+  for (i in seq(length(a.mean))){
+    for (j in seq(i,length(a.mean))){
+      new.var[i,j] = new.var[j,i] = sum(weight*weight*(eta[,i]-a.mean[i])*(eta[,j]-a.mean[j]))/(sum(weight))^2
+    }
+  }
+  return(new.var)
+}
+
+store.post <- function(marg,margs,j,n.prop){
+  if (length(marg)!=length(margs)){
+    margs = marg
+    for (i in seq(length(marg))){
+      margs[[i]] = list(x = matrix(NA, nrow = n.prop, ncol = length(marg[[i]][,1])),
+                        y = matrix(NA, nrow = n.prop, ncol = length(marg[[i]][,2])))
+      margs[[i]]$x[j,] = marg[[i]][,1]
+      margs[[i]]$y[j,] = marg[[i]][,2]
+    }
+    return(margs)
+  }else{
+    for (i in seq(length(marg))){
+      margs[[i]]$x[j,] = marg[[i]][,1]
+      margs[[i]]$y[j,] = marg[[i]][,2]
+    }
+    return(margs)
+  }
+}
 
 inla.w.is <- function(data, init, prior, d.prop, r.prop, n.prop,target.sd = 1){
   mlik = numeric(n.prop)
   eta = matrix(NA, ncol = length(init), nrow = n.prop)
   weight = numeric(n.prop)
-  post.marg = NA
   a.mean = init
-  a.sd = 5
-  m.weight = 0
-  n = 3
+  a.var = diag(5,length(init),length(init))
   pb <- txtProgressBar(min = 0, max = n.prop, style = 3)
   for (i in seq(n.prop)){
     setTxtProgressBar(pb, i)
-    eta[i,] = r.prop(a.mean, sigma = a.sd)
+    eta[i,] = r.prop(a.mean, sigma = a.var)
     mod = fit.inla(data,eta[i,])
     mlik[i] = mod$mlik
-    weight[i] = exp(mlik[i]) #+ prior(eta[i,]) - d.prop(eta[i,], a.mean, sigma = a.sd))
-    #a.sd = adaptive.sd2(a.sd,a.mean,weight[i], m.weight, eta[i,], n)
-    #a.sd = adaptive.sd(a.sd, weight[i], m.weight,target.sd)
-    a.sd = adaptive.sd3(a.sd, a.mean, weight[i], m.weight, eta[i,])
-    a.mean = adaptive.mean(a.mean, weight[i], m.weight, eta[i,])
-    post.marg = self.norm.imp.samp(mod$dists,post.marg,weight[i],m.weight)
-    m.weight = m.weight + weight[i]
-    n = n+1
+    weight[i] = mlik[i] + prior(eta[i,]) - d.prop(y = eta[i,], x = a.mean, sigma = a.var)
   }
+  weight = exp(weight - max(weight))
+  a.mean = c(sum(eta[,1]*weight)/sum(weight),sum(eta[,2]*weight)/sum(weight))
+  margs = NA
+  a.var = calc.var(a.mean,weight,eta)
+  cat("Set mean =",a.mean,"; var =",a.var,"\nSampling...")
+  eta = matrix(NA, ncol = length(init), nrow = n.prop)
+  weight = numeric(n.prop)
+  mlik = numeric(n.prop)
+  for (i in seq(n.prop)){
+    setTxtProgressBar(pb, i)
+    eta[i,] = r.prop(a.mean, sigma = a.var)
+    mod = fit.inla(data,eta[i,])
+    margs = store.post(mod$dists,margs,i,n.prop)
+    mlik[i] = mod$mlik
+    weight[i] = mlik[i] + prior(eta[i,]) - d.prop(eta[i,], a.mean, sigma = a.var)
+  }
+  weight = exp(weight - max(weight))
   return(list(eta = eta,
-              post.marg = post.marg,
-              weight = weight,
-              a.mean = a.mean,
-              a.sd = a.sd))
+              margs = margs,
+              weight = weight))
 }
 
 
@@ -130,13 +164,28 @@ sample.linreg <- function(){
 
 set.seed(1)
 df = sample.linreg()
-mod = inla.w.is(df,init = c(0,0), prior.beta, dq.beta, rq.beta, n.prop = 500)
+mod = inla.w.is(df,init = c(0,0), prior.beta, dq.beta, rq.beta, n.prop = 100)
 
-ggplot(as.data.frame(mod$post.marg$intercept)) + 
+fit.marginals <- function(ws,margs,len = 100){
+  xmin <- min(margs[[1]])
+  xmax <- max(margs[[1]])
+  xx <- seq(xmin, xmax, len = len)
+  marg = numeric(len)
+  for (i in seq(nrow(margs[[1]]))){
+    marg = marg + inla.dmarginal(xx, list(x = margs[[1]][i,], y = margs[[2]][i,]))
+  }
+  data.frame(x = xx, y = marg)
+}
+
+intercept = fit.marginals(mod$weight,mod$margs$intercept)
+
+
+tau = fit.marginals(mod$weight,mod$margs$tau)
+
+ggplot(intercept) + 
   geom_line(aes(x = x, y = y))
 
-
-ggplot(as.data.frame(mod$post.marg$tau)) + 
+ggplot(tau) + 
   geom_line(aes(x = x, y = y))
 
 ggplot(as.data.frame(mod$eta)) + 
@@ -144,9 +193,4 @@ ggplot(as.data.frame(mod$eta)) +
 
 ggplot(as.data.frame(mod$eta)) + 
   geom_histogram(aes(x = V2),bins = 30)
-
-mod$eta
-mod$weight
-mod$a.mean
-mod$a.sd
 
