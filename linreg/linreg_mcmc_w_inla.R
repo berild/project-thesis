@@ -61,7 +61,7 @@ moving.marginals <- function(marg, post.marg, n){
   post.marg
 }
 
-linreg.mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 5, n.thin = 1){
+mcmc.w.inla <- function(data,n.samples = 100, n.burnin = 5, n.thin = 1){
   beta = matrix(data = NA,nrow = n.samples, ncol = 2)
   mlik = numeric(n.samples)
   acc.vec = numeric(n.samples)
