@@ -1,21 +1,35 @@
-# AMIS with INLA
-load(file = "./linreg/linreg_amis_w_inla.Rdata")
-mod_amis = mod
-load(file = "./linreg/linreg_mcmc_w_inla.Rdata")
-mod_mcmc = mod
-mod_inla = inla(y~x, data = df)
-mod_inla = list(intercept = data.frame(mod_inla$marginals.fixed[[1]]),
-                cov1 = data.frame(mod_inla$marginals.fixed[[2]]),
-                cov2 = data.frame(mod_inla$marginals.fixed[[3]]),
-                tau = data.frame(mod_inla$marginals.hyperpar[[1]]))
+## loading simulation results
+load(file = "./linreg/sims/linreg-inla.Rdata")
+load(file = "./linreg/sims/linreg-ml-w-inla.Rdata")
+load(file = "./linreg/sims/linreg-pp-w-inla.Rdata")
+load(file = "./linreg/sims/linreg-is-w-inla.Rdata")
+load(file = "./linreg/sims/linreg-amis-w-inla.Rdata")
+load(file = "./linreg/sims/linreg-mcmc-w-inla.Rdata")
+
+
+## Plotting univariate distribution of the intercept; alpha
+
+ggplot() +
+  geom_vline(xintercept = ml[1,1]) +  
+  geom_line(data = ml_w_inla_mod$dists$intercept, aes(x = x, y = y, color = "ML with INLA")) + 
+  geom_line(data = data.frame(inla_mod$marginals.fixed[[1]]), aes(x = x, y = y, color = "INLA")) + 
+  geom_line(data = pp_w_inla_mod$margs$intercept, aes(x = x, y = y, color = "PP with INLA")) + 
+  geom_line(data = amis_w_inla_mod$margs$intercept, aes(x = x, y = y, color = "AMIS with INLA")) + 
+  geom_line(data = is_w_inla_mod$margs$intercept, aes(x = x, y = y, color = "IS with INLA"))
+
+## Plotting univariate distribution of the precition; tau
 
 ggplot() + 
-  geom_line(data = mod$margs$intercept,aes(x = x, y = y , color = "AMIS with INLA")) + 
-  geom_line(data = res_inla$intercept, aes(x=x,y=y, color = "INLA"))
+  geom_line(data = ml_w_inla_mod$dists$tau, aes(x = x, y = y, color = "ML with INLA")) + 
+  geom_line(data = data.frame(inla_mod$marginals.hyperpar[[1]]), aes(x = x, y = y, color = "INLA")) + 
+  geom_line(data = pp_w_inla_mod$margs$tau, aes(x = x, y = y, color = "PP with INLA")) + 
+  geom_line(data = amis_w_inla_mod$margs$tau, aes(x = x, y = y, color = "AMIS with INLA")) + 
+  geom_line(data = is_w_inla_mod$margs$tau, aes(x = x, y = y, color = "IS with INLA"))
+
+## Plotting bivariate distribution of model params; betas'
 
 ggplot() + 
-  geom_line(data = mod$margs$tau, aes(x = x, y = y, color = "AMIS with INLA")) + 
-  geom_line(data = res_inla$tau, aes(x = x, y = y, color = "INLA"))
-
-ggplot() + 
-  geom_contour(data=mod$eta_kern,aes(x=x,y=y,z=z,color = "AMIS with INLA"))
+  geom_point(data = data.frame(x = ml[2,1], y = ml[3,1]), aes(x = x, y = y, color = "ML")) + 
+  geom_contour(data = pp_w_inla_mod$eta_kern, aes(x = x, y = y, z = z, color = "PP with INLA")) + 
+  geom_contour(data = amis_w_inla_mod$eta_kern, aes(x = x, y = y, z = z, color = "AMIS with INLA")) + 
+  geom_contour(data = is_w_inla_mod$eta_kern, aes(x = x, y = y, z = z, color = "IS with INLA"))
