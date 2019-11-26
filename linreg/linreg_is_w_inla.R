@@ -10,10 +10,6 @@ dq.beta <- function(y, x, sigma = diag(5,2,2), log =TRUE) {
   dmvnorm(y,mean = x, sigma = sigma,log = log)
 }
 
-prior.beta <- function(x, sigma = sqrt(1/.001), log = TRUE) {
-  sum(dnorm(x, mean = 0, sd= sigma, log = log))
-}
-
 calc.theta <- function(theta,weight,eta,i_tot,i_cur){
   for (i in seq(ncol(eta))){
     theta$a.mu[i_cur,i] = sum(eta[1:i_tot,i]*weight[1:i_tot])/sum(weight[1:i_tot])

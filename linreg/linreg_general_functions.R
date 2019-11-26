@@ -20,7 +20,10 @@ calc.theta <- function(theta,weight,eta,i_tot,i_cur){
 
 calc.stats <- function(stats,weight){
   for (i in seq(length(stats))){
-    stats[[i]] = colSums(stats[[i]]*weight)/sum(weight)
+    new.stat = c(0,0)
+    new.stat[1] =  sum(stats[[i]]*weight)/sum(weight)
+    new.stat[2] = sum((stats[[i]] - new.stat[1])*(stats[[i]] - new.stat[1])*weight)/sum(weight)
+    stats[[i]] = new.stat
   }
   return(stats)
 }
@@ -29,13 +32,13 @@ store.stats <- function(stat,stats,j,n.prop){
   if (anyNA(stats)){
     stats = stat
     for (i in seq(length(stat))){
-      stats[[i]] = matrix(NA, nrow = n.prop, ncol = length(stat[[i]]))
-      stats[[i]][j,] = stat[[i]]
+      stats[[i]] = rep(NA, n.prop)
+      stats[[i]][j] = stat[[i]]
     }
     return(stats)
   }else{
     for (i in seq(length(stat))){
-      stats[[i]][j,] = stat[[i]]
+      stats[[i]][j] = stat[[i]]
     }
     return(stats)
   }
@@ -61,13 +64,14 @@ store.post <- function(marg,margs,j,n.prop){
 }
 
 fit.marginals <- function(ws,margs,len = 400){
-  xmin <- min(margs[[1]])
-  xmax <- max(margs[[1]])
+  ws = ws/sum(ws)
+  tmp.xmarg = na.omit(margs[[1]][ws > 1e-3])
+  xmin <- min(tmp.xmarg)
+  xmax <- max(tmp.xmarg)
   xx <- seq(xmin, xmax, len = len)
-  tot_ws = sum(ws)
   marg = numeric(len)
   for (i in seq(nrow(margs[[1]]))){
-    marg = marg + ws[i]/tot_ws*inla.dmarginal(xx, list(x = margs[[1]][i,], y = margs[[2]][i,]))
+    marg = marg + ws[i]*inla.dmarginal(xx, list(x = margs[[1]][i,], y = margs[[2]][i,]))
   }
   data.frame(x = xx, y = marg)
 }
@@ -97,6 +101,6 @@ fit.inla = function(data, beta){
   return(list(mlik = res$mlik[1],
               dists = list(intercept = res$marginals.fixed[[1]], 
                            tau = res$marginals.hyperpar[[1]]),
-              stats = list(intercept = as.numeric(res$summary.fixed[1:2]),
-                           tau  = as.numeric(res$summary.hyperpar[1:2]))))
+              stats = list(intercept = as.numeric(res$summary.fixed[1]),
+                           tau  = as.numeric(res$summary.hyperpar[1]))))
 }

@@ -36,7 +36,7 @@ save(pp_w_inla_mod, file = "./linreg/sims/linreg-pp-w-inla.Rdata")
 
 # fitting inla conditioned on samples from is
 source("./linreg/linreg_is_w_inla.R")
-is_w_inla_mod <- is.w.inla(data = df, init = list(mu = c(0,0), cov = diag(5,2,2)), prior.beta, dq.beta, rq.beta)
+is_w_inla_mod <- is.w.inla(data = df, init = list(mu = c(0,0), cov = diag(5,2,2)), prior.beta, dq.beta, rq.beta, N_0 = 200, N = 400)
 save(is_w_inla_mod, file = "./linreg/sims/linreg-is-w-inla.Rdata")
 
 # fitting inla conditioned on samples from amis
@@ -45,6 +45,6 @@ amis_w_inla_mod <- amis.w.inla(data = df, init = list(mu = c(0,0), cov = diag(5,
 save(amis_w_inla_mod, file = "./linreg/sims/linreg-amis-w-inla.Rdata")
 
 # fitting inla conditioned on samples from mh
-source("./linreg/simslinreg_mcmc_w_inla.R")
-mcmc_w_inla_mod <- mcmc.w.inla()
+source("./linreg/linreg_mcmc_w_inla.R")
+mcmc_w_inla_mod <- mcmc.w.inla(data = df, init = c(0,0), prior.beta, dq.beta, rq.beta, fit.inla, n.samples = 10000, n.burnin = 500, n.thin = 1)
 save(mcmc_w_inla_mod, file = "./linreg/sims/linreg-mcmc-w-inla.Rdata")
