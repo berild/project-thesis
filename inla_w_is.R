@@ -116,81 +116,44 @@ store.post <- function(marg,margs,j,n.prop){
   }
 }
 
-inla.w.is <- function(data, init, prior, d.prop, r.prop, n.prop,target.sd = 1){
-  mlik = numeric(n.prop)
-  eta = matrix(NA, ncol = length(init), nrow = n.prop)
-  weight = numeric(n.prop)
-  a.mean = init
-  a.var = diag(5,length(init),length(init))
-  pb <- txtProgressBar(min = 0, max = n.prop, style = 3)
-  for (i in seq(n.prop)){
+
+
+is.w.inla <- function(data, init, prior, d.prop, r.prop, N_0 = 200, N = 400){
+  mlik = numeric(N_0)
+  eta = matrix(NA, ncol = length(init$mu), nrow = N_0)
+  weight = numeric(N_0)
+  theta = list(a.mu = matrix(NA, ncol = length(init$mu), nrow = 2),
+               a.cov = array(NA, dim = c(length(init$mu), length(init$mu), 2))) 
+  theta$a.mu[1,] = init$mu
+  theta$a.cov[,,1] = init$cov
+  pb <- txtProgressBar(min = 0, max = N+N_0, style = 3)
+  for (i in seq(N_0)){
     setTxtProgressBar(pb, i)
-    eta[i,] = r.prop(a.mean, sigma = a.var)
+    eta[i,] = r.prop(theta$a.mu[1,], sigma = theta$a.cov[,,1])
     mod = fit.inla(data,eta[i,])
     mlik[i] = mod$mlik
-    weight[i] = mlik[i] + prior(eta[i,]) - d.prop(y = eta[i,], x = a.mean, sigma = a.var)
+    weight[i] = mlik[i] + prior(eta[i,]) - d.prop(y = eta[i,], x = theta$a.mu[1,], sigma = theta$a.cov[,,1])
   }
   weight = exp(weight - max(weight))
-  a.mean = c(sum(eta[,1]*weight)/sum(weight),sum(eta[,2]*weight)/sum(weight))
+  theta = calc.theta(theta,weight,eta,nrow(eta),2)
   margs = NA
-  a.var = calc.var(a.mean,weight,eta)
-  cat("Set mean =",a.mean,"; var =",a.var,"\nSampling...")
-  eta = matrix(NA, ncol = length(init), nrow = n.prop)
-  weight = numeric(n.prop)
-  mlik = numeric(n.prop)
-  for (i in seq(n.prop)){
-    setTxtProgressBar(pb, i)
-    eta[i,] = r.prop(a.mean, sigma = a.var)
+  eta = matrix(NA, ncol = length(init$mu), nrow = N)
+  weight = numeric(N)
+  mlik = numeric(N)
+  for (i in seq(N)){
+    setTxtProgressBar(pb, i+N_0)
+    eta[i,] = r.prop(theta$a.mu[2,], sigma = theta$a.cov[,,2])
     mod = fit.inla(data,eta[i,])
-    margs = store.post(mod$dists,margs,i,n.prop)
+    margs = store.post(mod$dists,margs,i,N)
     mlik[i] = mod$mlik
-    weight[i] = mlik[i] + prior(eta[i,]) - d.prop(eta[i,], a.mean, sigma = a.var)
+    weight[i] = mlik[i] + prior(eta[i,]) - d.prop(y = eta[i,], x = theta$a.mu[2,], sigma = theta$a.cov[,,2])
   }
   weight = exp(weight - max(weight))
+  eta_kern = kde2d.weighted(x = eta[,1], y = eta[,2], w = weight/(sum(weight)), n = 100, lims = c(1,3,-3,-1))
+  eta_kern = data.frame(expand.grid(x=eta_kern$x, y=eta_kern$y), z=as.vector(eta_kern$z))
   return(list(eta = eta,
-              margs = margs,
+              theta = theta,
+              eta_kern = eta_kern,
+              margs = lapply(margs, function(x){fit.marginals(weight,x)}),
               weight = weight))
 }
-
-
-sample.linreg <- function(){
-  n = 100
-  x1 = runif(n)
-  x2 = runif(n)
-  err = rnorm(n)
-  y = 3 + 2*x1 -2*x2 + err
-  return(list(y = y,x = matrix(c(x1,x2),ncol = 2)))
-}
-
-set.seed(1)
-df = sample.linreg()
-mod = inla.w.is(df,init = c(0,0), prior.beta, dq.beta, rq.beta, n.prop = 100)
-
-fit.marginals <- function(ws,margs,len = 100){
-  xmin <- min(margs[[1]])
-  xmax <- max(margs[[1]])
-  xx <- seq(xmin, xmax, len = len)
-  marg = numeric(len)
-  for (i in seq(nrow(margs[[1]]))){
-    marg = marg + inla.dmarginal(xx, list(x = margs[[1]][i,], y = margs[[2]][i,]))
-  }
-  data.frame(x = xx, y = marg)
-}
-
-intercept = fit.marginals(mod$weight,mod$margs$intercept)
-
-
-tau = fit.marginals(mod$weight,mod$margs$tau)
-
-ggplot(intercept) + 
-  geom_line(aes(x = x, y = y))
-
-ggplot(tau) + 
-  geom_line(aes(x = x, y = y))
-
-ggplot(as.data.frame(mod$eta)) + 
-  geom_histogram(aes(x = V1),bins = 30)
-
-ggplot(as.data.frame(mod$eta)) + 
-  geom_histogram(aes(x = V2),bins = 30)
-
