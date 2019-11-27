@@ -1,38 +1,12 @@
+require(INLA)
+require(MASS)
+
 rq.beta <- function(x, sigma = .75) {
   rnorm(length(x), mean = x, sd = sigma)
 }
 
 dq.beta <- function(y, x, sigma = .75, log =TRUE) {
   sum(dnorm(x, mean = y, sd = sigma, log = log))
-}
-
-moving.marginals <- function(marg, post.marg, n){
-  for (i in seq(length(post.marg))){
-    tmp.post.marg = post.marg[[i]]
-    tmp.marg = marg[[i]]
-    step = tmp.post.marg[2,1] - tmp.post.marg[1,1]
-    new.x = tmp.post.marg[,1]
-    new.y = tmp.post.marg[,2]
-    if (max(tmp.marg[,1])>max(new.x)){
-      new.u = seq(from = max(new.x) + step,
-                  to = max(tmp.marg[,1])+ step,
-                  by = step)
-      new.x = c(new.x, new.u)
-      new.y = c(new.y,rep(0,length(new.u)))
-    }
-    if (min(tmp.marg[,1])<min(new.x)){
-      new.l = seq(from = min(new.x) - step,
-                  to = min(tmp.marg[,1]) - step,
-                  by = - step)
-      new.x = c(rev(new.l), new.x)
-      new.y = c(rep(0,length(new.l)),new.y)
-    }
-    tmp.post.marg = data.frame(x = new.x, y = new.y)
-    tmp = inla.dmarginal(tmp.post.marg[,1], tmp.marg, log = FALSE)
-    tmp.post.marg[,2] = (tmp + (n-1)*tmp.post.marg[,2])/n
-    post.marg[[i]] = tmp.post.marg
-  }
-  post.marg
 }
 
 mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
@@ -45,7 +19,7 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
   mlik[1] = mod.curr$mlik
   pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
   i_marg = 0
-  N_marg = floor((n.samples - n.burnin + 1)/n.thin)
+  N_marg = floor((n.samples - n.burnin)/n.thin)
   margs = NA
   for (i in seq(2, n.samples)){
     setTxtProgressBar(pb, i)
@@ -65,14 +39,14 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
       mlik[i] = mlik[i-1]
       acc.vec[i] = F
     }
-    if(i >= n.burnin){
-      if ((i %% n.thin)==0){
+    if(i > n.burnin){
+      if (((i-1) %% n.thin)==0){
         i_marg = i_marg + 1
         margs = store.post(mod.curr$dists,margs,i_marg,N_marg)
       }
     }
   }
-  eta = eta[-seq(n.burnin-1),]
+  eta = eta[-seq(n.burnin),]
   eta = eta[seq(from = 1, to = nrow(eta), by=n.thin),]
   eta_kern = kde2d(x = eta[,1], y = eta[,2], n = 100, lims = c(1,3,-3,-1))
   eta_kern = data.frame(expand.grid(x=eta_kern$x, y=eta_kern$y), z=as.vector(eta_kern$z))

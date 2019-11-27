@@ -1,3 +1,31 @@
+moving.marginals <- function(marg, post.marg, n){
+  for (i in seq(length(post.marg))){
+    tmp.post.marg = post.marg[[i]]
+    tmp.marg = marg[[i]]
+    step = tmp.post.marg[2,1] - tmp.post.marg[1,1]
+    new.x = tmp.post.marg[,1]
+    new.y = tmp.post.marg[,2]
+    if (max(tmp.marg[,1])>max(new.x)){
+      new.u = seq(from = max(new.x) + step,
+                  to = max(tmp.marg[,1])+ step,
+                  by = step)
+      new.x = c(new.x, new.u)
+      new.y = c(new.y,rep(0,length(new.u)))
+    }
+    if (min(tmp.marg[,1])<min(new.x)){
+      new.l = seq(from = min(new.x) - step,
+                  to = min(tmp.marg[,1]) - step,
+                  by = - step)
+      new.x = c(rev(new.l), new.x)
+      new.y = c(rep(0,length(new.l)),new.y)
+    }
+    tmp.post.marg = data.frame(x = new.x, y = new.y)
+    tmp = inla.dmarginal(tmp.post.marg[,1], tmp.marg, log = FALSE)
+    tmp.post.marg[,2] = (tmp + (n-1)*tmp.post.marg[,2])/n
+    post.marg[[i]] = tmp.post.marg
+  }
+  post.marg
+}
 
 moving.bma <- function(marg, post.marg, n){
   require(INLA)
