@@ -63,11 +63,24 @@ store.post <- function(marg,margs,j,n.prop){
   }
 }
 
+running.ESS <- function(eta, ws = NA){
+  if (anyNA(ws)){
+    require(coda)
+    ess = unlist(lapply(sapply(seq(nrow(eta)),function(x){
+      effectiveSize(eta[1:x,])
+    }),min))
+  }else{
+    ess = unlist(sapply(seq(length(ws)),function(x){
+      sum(ws[1:x])^2/(sum(ws[1:x]^2))
+    }))
+  }
+  return(ess)
+}
+
 fit.marginals <- function(ws,margs,len = 400){
   ws = ws/sum(ws)
-  tmp.xmarg = na.omit(margs[[1]][ws > 1e-3])
-  xmin <- min(tmp.xmarg)
-  xmax <- max(tmp.xmarg)
+  xmin <- quantile(apply(margs[[1]],1,function(X){min(X)}),0.25)
+  xmax <- quantile(apply(margs[[1]],1,function(X){max(X)}),0.75)
   xx <- seq(xmin, xmax, len = len)
   marg = numeric(len)
   for (i in seq(nrow(margs[[1]]))){
@@ -95,8 +108,8 @@ kde2d.weighted <- function (x, y, w, h, n = 25, lims = c(range(x), range(y))) {
   return(list(x = gx, y = gy, z = z))
 }
 
-fit.inla = function(data, beta){
-  data$oset = data$x%*%beta
+fit.inla <- function(data, beta){
+  data$oset = data$x%*%t(beta)
   res = inla(y~1+offset(oset), data = data)
   return(list(mlik = res$mlik[1],
               dists = list(intercept = res$marginals.fixed[[1]], 
