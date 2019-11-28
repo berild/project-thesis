@@ -4,31 +4,13 @@ library(spatialreg)
 library(INLABMA)
 
 data(columbus)
-
 lw <- nb2listw(col.gal.nb, style="W")
-colsemml <- errorsarlm(CRIME ~ INC + HOVAL, data=columbus, lw, method="eigen", 
-                       quiet=TRUE)
+colsemml <- errorsarlm(CRIME ~ INC + HOVAL, data=columbus, lw, method="eigen", quiet=TRUE)
 W <- as(as_dgRMatrix_listw(nb2listw(col.gal.nb)), "CsparseMatrix")
 columbus$idx<-1:nrow(columbus)
-
-
-
 form<- CRIME ~ INC + HOVAL
-
 zero.variance = list(prec=list(initial = 25, fixed=TRUE))
-
-fit.inla <- function(data, rho) {
-  res <- sem.inla(form, d = data, W = W, rho = rho,
-                  family = "gaussian", impacts = FALSE,
-                  control.family = list(hyper = zero.variance),
-                  verbose = FALSE)
-  
-  return(list(mlik = res$mlik[[1]],
-              dists = list(intercept = res$marginals.fixed[[1]],
-                   INC = res$marginals.fixed[[2]],
-                   HOVAL = res$marginals.fixed[[3]],
-                   tau = res$marginals.hyperpar[[1]])))
-}
+df = columbus
 
 dq.rho <- function(x, y, sigma = .15, log =TRUE) {
   dnorm(y, mean = x, sd = sigma, log = log)
@@ -36,10 +18,6 @@ dq.rho <- function(x, y, sigma = .15, log =TRUE) {
 
 rq.rho <- function(x, sigma = .15) {
   rnorm(1, mean = x, sd = sigma)
-}
-
-prior.rho <- function(x, log = TRUE) {
-  dunif(x, -1.5, 1, log = log)
 }
 
 
