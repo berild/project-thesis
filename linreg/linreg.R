@@ -1,9 +1,11 @@
+# loading required libraries
 library(INLA)
 library(mvtnorm)
-library(ggplot2)
 library(MASS)
-# loading required packages
+library(parallel)
+library(coda)
 
+# function for generating samples
 sample.linreg <- function(){
   n = 100
   x1 = runif(n)
@@ -12,6 +14,7 @@ sample.linreg <- function(){
   y = 3 + 2*x1 -2*x2 + err
   return(list(y = y,x = matrix(c(x1,x2),ncol = 2)))
 }
+
 # sampling dataset
 set.seed(1)
 df = sample.linreg()
