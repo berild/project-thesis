@@ -57,6 +57,7 @@ vignettes/*.pdf
 # R package: bookdown caching files
 /*_files/
 **/*.Rdata
+!**/sims/*.Rdata
 
 ### Windows ###
 # Windows thumbnail cache files
