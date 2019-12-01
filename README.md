@@ -1,10 +1,14 @@
-# Markov chain Monte Carlo with the Integrated Nested Laplace Approximation
+# Adaptive Multiple Importance Sampling with the Integrated Nested Laplace Approximation
 
-Project thesis about expanding the classes of models where INLA can be used. 
+Project Thesis code, Introducing a methodology to do inference about conditional latent gaussian models. 
+The method combines the adaptive multiple importance sampling algorithm and the density approximation method, INLA. 
+Our implementation is applied to a set of examples to highlight the effectiveness and precision of the AMIS with INLA methodology.
 
-## Lasso Regression
+## Bivariate Linear Regression
 
-## Missing values
+## Bayesian Lasso Regression
+
+## Missing Covariates
 
 ## Spatial Econometric Model
 
