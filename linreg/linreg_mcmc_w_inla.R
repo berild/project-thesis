@@ -17,9 +17,11 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
   eta[1,] = init
   mod.curr = fit.inla(data, eta[1,])
   mlik[1] = mod.curr$mlik
+  starttime = Sys.time()
   pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
   i_marg = 0
   N_marg = floor((n.samples - n.burnin)/n.thin)
+  times = numeric(N_marg)
   margs = NA
   for (i in seq(2, n.samples)){
     setTxtProgressBar(pb, i)
@@ -43,6 +45,7 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
       if (((i-1) %% n.thin)==0){
         i_marg = i_marg + 1
         margs = store.post(mod.curr$dists,margs,i_marg,N_marg)
+        times = as.numeric(Sys.time() - starttime)
       }
     }
   }
@@ -54,5 +57,6 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
               eta_kern = eta_kern,
               margs = lapply(margs, function(x){fit.marginals(rep(1,N_marg),x)}),
               acc.vec = acc.vec,
-              mlik = mlik))
+              mlik = mlik,
+              times = times))
 }

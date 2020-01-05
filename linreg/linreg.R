@@ -27,15 +27,15 @@ save(inla_mod, file = "./linreg/sims/linreg-inla.Rdata")
 ml = summary(lm(y~x, data = df))$coefficients[,1:2]
 
 # fitting inla condtitioned on ml
-source("./linreg/linreg_ml_w_inla.R")
-ml_w_inla_mod = fit.inla.ml(df,ml)
-save(ml_w_inla_mod, file = "./linreg/sims/linreg-ml-w-inla.Rdata")
+#source("./linreg/linreg_ml_w_inla.R")
+#ml_w_inla_mod = fit.inla.ml(df,ml)
+#save(ml_w_inla_mod, file = "./linreg/sims/linreg-ml-w-inla.Rdata")
 
 # fitting inla conditioned on point patterns
 source("./linreg/linreg_general_functions.R")
-source("./linreg/linreg_pp_w_inla.R")
-pp_w_inla_mod <- pp.w.inla(df, ml[-1,], fit.inla, prior.beta, len = 20)
-save(pp_w_inla_mod, file = "./linreg/sims/linreg-pp-w-inla.Rdata")
+#source("./linreg/linreg_pp_w_inla.R")
+#pp_w_inla_mod <- pp.w.inla(df, ml[-1,], fit.inla, prior.beta, len = 20)
+#save(pp_w_inla_mod, file = "./linreg/sims/linreg-pp-w-inla.Rdata")
 
 # fitting inla conditioned on samples from is
 source("./linreg/linreg_is_w_inla.R")

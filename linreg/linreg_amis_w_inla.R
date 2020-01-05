@@ -46,7 +46,7 @@ par.amis <- function(x, data, theta, t, N_0, N_t, N_tmp,
     delta = N_0*d.prop(y = eta, x = theta$a.mu[1,], sigma = theta$a.cov[,,1],log = FALSE) + calc.delta(N_t,eta,theta, t, d.prop)
     weight = exp(mod$mlik + prior(eta))/(delta/N_tmp)
   }
-  return(list(mlik = mod$mlik, dists = mod$dists, stats = mod$stats, eta = eta, delta = delta, weight = weight))
+  return(list(mlik = mod$mlik, dists = mod$dists, stats = mod$stats, eta = eta, delta = delta, weight = weight, times = Sys.time()))
 }
 
 amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(20,20)){
@@ -56,6 +56,7 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
   eta = matrix(NA, ncol = length(init), nrow = N_tot)
   delta = numeric(N_tot)
   weight = numeric(N_tot)
+  times = numeric(N_tot)
   theta = list(a.mu = matrix(NA, ncol = length(init$mu), nrow = length(N_t) + 2),
                a.cov = array(NA, dim = c(length(init$mu), length(init$mu), length(N_t) +2))) 
   theta$a.mu[1,] = init$mu
@@ -66,6 +67,7 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
   pb <- txtProgressBar(min = 0, max = N_tot, style = 3)
   margs = NA
   stats = NA
+  starttime = Sys.time()
   N_tmp = N_0
   t = 0
   amis.list = mclapply(seq(N_0),function(x){
@@ -82,6 +84,8 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
     mlik[i_tot] = ele$mlik
     delta[i_tot] = ele$delta
     weight[i_tot] = ele$weight
+    times[i_tot] = as.numeric(ele$times - starttime)
+    
   }
   theta = calc.theta(theta,weight,eta,i_tot,2)
   
@@ -102,6 +106,7 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
       mlik[i_tot] = ele$mlik
       delta[i_tot] = ele$delta
       weight[i_tot] = ele$weight
+      times[i_tot] = as.numeric(ele$times - starttime)
     }
     delta.weight = update.delta.weight(delta[1:(N_tmp - N_t[t])],weight[1:(N_tmp - N_t[t])],N_t = c(N_0,N_t),eta[1:(N_tmp - N_t[t]),],theta,t,mlik[1:(N_tmp - N_t[t])],prior,d.prop)
     delta[1:(N_tmp - N_t[t])] = delta.weight$delta
@@ -116,5 +121,6 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
               eta_kern = eta_kern,
               stats = stats,
               margs = lapply(margs, function(x){fit.marginals(weight,x)}),
-              weight = weight))
+              weight = weight,
+              times = times))
 }
