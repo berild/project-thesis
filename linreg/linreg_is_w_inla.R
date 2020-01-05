@@ -54,7 +54,7 @@ is.w.inla <- function(data, init, prior, d.prop, r.prop, N_0 = 200, N = 400){
     stats = store.stats(is.list[[i]]$stats,stats,i,N)
     weight[i] = is.list[[i]]$weight
     mlik[i] = is.list[[i]]$mlik
-    times = is.list[[i]]$times
+    times[i] = as.numeric(is.list[[i]]$times-starttime)
   }
   weight = exp(weight - max(weight))
   eta_kern = kde2d.weighted(x = eta[,1], y = eta[,2], w = weight/(sum(weight)), n = 100, lims = c(1,3,-3,-1))

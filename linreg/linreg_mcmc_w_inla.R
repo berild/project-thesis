@@ -45,7 +45,7 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
       if (((i-1) %% n.thin)==0){
         i_marg = i_marg + 1
         margs = store.post(mod.curr$dists,margs,i_marg,N_marg)
-        times = as.numeric(Sys.time() - starttime)
+        times[i_marg] = as.numeric(Sys.time() - starttime)
       }
     }
   }
