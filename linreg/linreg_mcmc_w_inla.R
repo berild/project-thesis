@@ -15,7 +15,7 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
   mlik = numeric(n.samples)
   acc.vec = numeric(n.samples)
   eta[1,] = init
-  mod.curr = fit.inla(data, eta[1,])
+  mod.curr = fit.inla(data, t(eta[1,]))
   mlik[1] = mod.curr$mlik
   starttime = Sys.time()
   pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
@@ -26,7 +26,7 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
   for (i in seq(2, n.samples)){
     setTxtProgressBar(pb, i)
     eta.new = r.prop(eta[i-1,])
-    mod.new = fit.inla(data, eta.new)
+    mod.new = fit.inla(data, t(eta.new))
     lacc1 = mod.new$mlik + prior(eta.new) + d.prop(eta.new, eta[i-1,])
     lacc2 = mod.curr$mlik + prior(eta[i-1,]) + d.prop(eta[i-1,], eta.new)
     acc = min(1,exp(lacc1 - lacc2))
