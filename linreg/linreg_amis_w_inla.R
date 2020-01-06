@@ -5,10 +5,12 @@ require(parallel)
 
 rq.beta <- function(x=c(0,0), sigma = diag(5,2,2)) {
   rmvnorm(1,mean=x,sigma = sigma)
+  #rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted")
 }
 
 dq.beta <- function(y, x, sigma = diag(5,2,2), log =TRUE) {
   dmvnorm(y,mean = x, sigma = sigma,log = log)
+  #dmvt(y,delta=x,sigma=sigma,df=1,log=log,type = "shifted")
 }
 
 calc.delta <- function(N_t,eta,theta,t,d.prop){
@@ -49,8 +51,15 @@ par.amis <- function(x, data, theta, t, N_0, N_t, N_tmp,
   return(list(mlik = mod$mlik, dists = mod$dists, stats = mod$stats, eta = eta, delta = delta, weight = weight, times = Sys.time()))
 }
 
-amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(20,20)){
-  N_0 = round(sum(N_t)/2)
+amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(20,20), N_0 = NA){
+  if (anyNA(N_0)){
+    N_0 = round(sum(N_t)/2) 
+  }
+  if (detectCores()>10){
+    ncores = 10
+  }else{
+    ncores = detectCores()
+  }
   N_tot = N_0 + sum(N_t)
   mlik = numeric(N_tot)
   eta = matrix(NA, ncol = length(init), nrow = N_tot)
@@ -74,7 +83,7 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
     par.amis(x, data, theta, t, N_0, 
              N_t, N_tmp, prior, d.prop,
              r.prop, fit.inla)
-  }, mc.set.seed = TRUE, mc.cores = detectCores())
+  }, mc.set.seed = TRUE, mc.cores = ncores)
   for (ele in amis.list){
     setTxtProgressBar(pb, i_tot)
     i_tot = i_tot + 1
@@ -84,7 +93,7 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
     mlik[i_tot] = ele$mlik
     delta[i_tot] = ele$delta
     weight[i_tot] = ele$weight
-    times[i_tot] = as.numeric(ele$times - starttime)
+    times[i_tot] = as.numeric(difftime(ele$times,starttime,units = "secs"))
     
   }
   theta = calc.theta(theta,weight,eta,i_tot,2)
@@ -96,7 +105,7 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
       par.amis(x, data, theta, t, N_0, 
                N_t, N_tmp, prior, d.prop,
                r.prop, fit.inla)
-    },mc.set.seed = TRUE, mc.cores = detectCores())
+    },mc.set.seed = TRUE, mc.cores = ncores)
     for (ele in amis.list){
       setTxtProgressBar(pb, i_tot)
       i_tot = i_tot + 1
@@ -106,7 +115,7 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
       mlik[i_tot] = ele$mlik
       delta[i_tot] = ele$delta
       weight[i_tot] = ele$weight
-      times[i_tot] = as.numeric(ele$times - starttime)
+      times[i_tot] = as.numeric(difftime(ele$times,starttime,units = "secs"))
     }
     delta.weight = update.delta.weight(delta[1:(N_tmp - N_t[t])],weight[1:(N_tmp - N_t[t])],N_t = c(N_0,N_t),eta[1:(N_tmp - N_t[t]),],theta,t,mlik[1:(N_tmp - N_t[t])],prior,d.prop)
     delta[1:(N_tmp - N_t[t])] = delta.weight$delta

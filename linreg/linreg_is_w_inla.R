@@ -5,10 +5,12 @@ require(parallel)
 
 rq.beta <- function(x=c(0,0), sigma = diag(5,2,2)) {
   rmvnorm(1,mean=x,sigma = sigma)
+  #rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted")
 }
 
 dq.beta <- function(y, x, sigma = diag(5,2,2), log =TRUE) {
   dmvnorm(y,mean = x, sigma = sigma,log = log)
+  #dmvt(y,delta=x,sigma=sigma,df=1,log=log,type = "shifted")
 }
 
 par.is <- function(x, data, theta, t, prior, d.prop, r.prop, fit.inla){
@@ -22,6 +24,11 @@ par.is <- function(x, data, theta, t, prior, d.prop, r.prop, fit.inla){
 is.w.inla <- function(data, init, prior, d.prop, r.prop, N_0 = 200, N = 400){
   eta = matrix(NA, ncol = length(init$mu), nrow = N_0)
   weight = numeric(N_0)
+  if (detectCores()>10){
+    ncores = 10
+  }else{
+    ncores = detectCores()
+  }
   theta = list(a.mu = matrix(NA, ncol = length(init$mu), nrow = 2),
                a.cov = array(NA, dim = c(length(init$mu), length(init$mu), 2))) 
   theta$a.mu[1,] = init$mu
@@ -31,7 +38,7 @@ is.w.inla <- function(data, init, prior, d.prop, r.prop, N_0 = 200, N = 400){
   pb <- txtProgressBar(min = 0, max = N+N_0, style = 3)
   is.list = mclapply(seq(N_0), function(x){
     par.is(x, data, theta, 1, prior, d.prop,r.prop, fit.inla)
-  }, mc.set.seed = TRUE, mc.cores = detectCores())
+  }, mc.set.seed = TRUE, mc.cores = ncores)
   for (i in seq(length(is.list))){
     setTxtProgressBar(pb, i)
     eta[i,] = is.list[[i]]$eta
@@ -46,7 +53,7 @@ is.w.inla <- function(data, init, prior, d.prop, r.prop, N_0 = 200, N = 400){
   mlik = numeric(N)
   is.list = mclapply(seq(N), function(x){
     par.is(x, data, theta, 2, prior, d.prop,r.prop, fit.inla)
-  }, mc.set.seed = TRUE, mc.cores = detectCores())
+  }, mc.set.seed = TRUE, mc.cores = ncores)
   for (i in seq(length(is.list))){
     setTxtProgressBar(pb, i+N_0)
     eta[i,] = is.list[[i]]$eta
@@ -54,7 +61,7 @@ is.w.inla <- function(data, init, prior, d.prop, r.prop, N_0 = 200, N = 400){
     stats = store.stats(is.list[[i]]$stats,stats,i,N)
     weight[i] = is.list[[i]]$weight
     mlik[i] = is.list[[i]]$mlik
-    times[i] = as.numeric(is.list[[i]]$times-starttime)
+    times[i] = as.numeric(difftime(is.list[[i]]$times,starttime,units = "secs"))
   }
   weight = exp(weight - max(weight))
   eta_kern = kde2d.weighted(x = eta[,1], y = eta[,2], w = weight/(sum(weight)), n = 100, lims = c(1,3,-3,-1))
