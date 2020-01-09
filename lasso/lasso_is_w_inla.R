@@ -1,16 +1,15 @@
 require(INLA)
-require(MASS)
 require(mvtnorm)
 require(parallel)
 
-rq.beta <- function(x=c(0,0), sigma = diag(5,2,2)) {
-  rmvnorm(1,mean=x,sigma = sigma)
-  #rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted")
+dq.beta <- function(y, x, sigma = diag(5,2,2), log =TRUE) {
+  #dmvnorm(y,mean = x, sigma = sigma,log = log)
+  dmvt(y,delta=x,sigma=sigma,df=1,log=log,type = "shifted")
 }
 
-dq.beta <- function(y, x, sigma = diag(5,2,2), log =TRUE) {
-  dmvnorm(y,mean = x, sigma = sigma,log = log)
-  #dmvt(y,delta=x,sigma=sigma,df=1,log=log,type = "shifted")
+rq.beta <- function(x=c(0,0), sigma = diag(5,2,2)) {
+  #rmvnorm(1,mean=x,sigma = sigma)
+  as.vector(rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted"))
 }
 
 par.is <- function(x, data, theta, t, prior, d.prop, r.prop, fit.inla){
@@ -66,7 +65,6 @@ is.w.inla <- function(data, init, prior, d.prop, r.prop, N_0 = 200, N = 400){
   weight = exp(weight - max(weight))
   return(list(eta = eta,
               theta = theta,
-              eta_kern = eta_kern,
               margs = lapply(margs, function(x){fit.marginals(weight,x)}),
               weight = weight,
               times = times))

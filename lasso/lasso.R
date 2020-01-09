@@ -72,28 +72,22 @@ stdev.samp <- .25 * solve(t(x)%*%x)
 
 source("./lasso/lasso_general_function.R")
 
-#source("./lasso/lasso_ml_w_inla.R")
-#is_w_inla_mod = ml.w.inla(data = df, init = list(mu = rep(0,n.beta), cov = 6*stdev.samp), prior.beta, dq.beta, rq.beta, fit.inla, N_t = rep(20,20))
-#save(mod, file = "./lasso/lasso-ml-w-inla.Rdata")
+# fitting inla conditioned on samples from is
+source("./lasso/lasso_is_w_inla.R")
+is_w_inla_mod = is.w.inla(data = df, init = list(mu = rep(0,n.beta), cov = 6*stdev.samp), 
+                          prior.beta, dq.beta, rq.beta, N_0 = 800, N = 10000)
+save(is_w_inla_mod, file = "./lasso/sims/lasso-is-w-inla.Rdata")
 
-
-#source("./lasso/lasso_pp_w_inla.R")
-#pp_w_inla_mod = pp.w.inla(data = df, init = list(mu = rep(0,n.beta), cov = 6*stdev.samp), prior.beta, dq.beta, rq.beta, fit.inla, N_t = rep(20,20))
-#save(mod, file = "./lasso/lasso-pp-w-inla.Rdata")
-
-
-#source("./lasso/lasso_is_w_inla.R")
-#is_w_inla_mod = is.w.inla(data = df, init = list(mu = rep(0,n.beta), cov = 6*stdev.samp), prior.beta, dq.beta, rq.beta, N_0 = 800, N = 10000)
-#save(mod, file = "./lasso/sims/lasso-amis-w-inla.Rdata")
-
-
+# fitting inla conditioned on samples from amis
 source("./lasso/lasso_amis_w_inla.R")
-amis_w_inla_mod = amis.w.inla(data = df, init = list(mu = rep(0,n.beta), cov = 4*stdev.samp), prior.beta, dq.beta, rq.beta, fit.inla, N_t = seq(25,50,1)*10, N_0 = 250)
+amis_w_inla_mod = amis.w.inla(data = df, init = list(mu = rep(0,n.beta), cov = 4*stdev.samp), 
+                              prior.beta, dq.beta, rq.beta, fit.inla, N_t = seq(25,50,1)*10, N_0 = 250)
 save(amis_w_inla_mod, file = "./lasso/sims/lasso-amis-w-inla.Rdata")
 
-
-#source("./lasso/lasso_mcmc_w_inla.Rdata")
-#mcmc_w_inla_mod = mcmc.w.inla(data = df, init = list(mu = rep(0,n.beta), cov = 6*stdev.samp), prior.beta, dq.beta, rq.beta, fit.inla, N_t = rep(20,20))
-#save(mod, file = "./lasso/sims/lasso-mcmc-w-inla.Rdata")
-
+# fitting inla conditioned on samples from mcmc
+source("./lasso/lasso_mcmc_w_inla.Rdata")
+mcmc_w_inla_mod = mcmc.w.inla(data = df, init = rep(0,ncol(df$x)), 
+                              prior.beta, dq.beta, rq.beta, fit.inla, 
+                              n.samples = 100500, n.burnin = 500, n.thin = 10)
+save(mod, file = "./lasso/sims/lasso-mcmc-w-inla.Rdata")
 

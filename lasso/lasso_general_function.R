@@ -1,5 +1,7 @@
 require(INLA)
 require(MASS)
+require(coda)
+require(mvtnorm)
 
 
 fit.inla <- function(data, beta) {
@@ -20,25 +22,14 @@ prior.beta <- function(x, mu = 0, lambda = 0.073, log = TRUE) {
   return(res)
 }
 
-
-dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
-  dmvnorm(y, mean = x, sigma = sigma, log = log)
-  #rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted")
-}
-
-rq.beta <- function(x, sigma = stdev.samp) {
-  rmvnorm(1, mean = x, sigma = sigma)
-  #rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted")
-}
-
-
 calc.theta <- function(theta,weight,eta,i_tot,i_cur){
   for (i in seq(ncol(eta))){
     theta$a.mu[i_cur,i] = sum(eta[1:i_tot,i]*weight[1:i_tot])/sum(weight[1:i_tot])
   }
   for (i in seq(ncol(eta))){
     for (j in seq(i,ncol(eta))){
-      theta$a.cov[i,j,i_cur] = theta$a.cov[j,i,i_cur] = sum(weight[1:i_tot]*(eta[1:i_tot,i]-theta$a.mu[i_cur,i])*(eta[1:i_tot,j]-theta$a.mu[i_cur,j]))/(sum(weight[1:i_tot]))
+      theta$a.cov[i,j,i_cur] = theta$a.cov[j,i,i_cur] = sum(weight[1:i_tot]*(eta[1:i_tot,i]-theta$a.mu[i_cur,i])*
+                                                              (eta[1:i_tot,j]-theta$a.mu[i_cur,j]))/(sum(weight[1:i_tot]))
     }
   }
   return(theta)

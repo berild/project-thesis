@@ -1,6 +1,5 @@
 require(mvtnorm)
 require(INLA)
-require(MASS)
 require(parallel)
 
 dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {

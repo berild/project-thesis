@@ -2,13 +2,35 @@ require(INLA)
 require(mvtnorm)
 require(MASS)
 
+dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
+  dmvnorm(y, mean = x, sigma = sigma, log = log)
+  #rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted")
+}
 
-mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
+rq.beta <- function(x, sigma = stdev.samp) {
+  as.vector(rmvnorm(1, mean = x, sigma = sigma))
+  #rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted")
+}
+
+mcmc.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla,
                         n.samples = 100, n.burnin = 5, n.thin = 1){
-  for (i in seq(2, n.samples)){
+  eta = matrix(data = NA,nrow = n.samples, ncol = ncol(data$x))
+  colnames(eta) = colnames(data$x)
+  mlik = numeric(n.samples)
+  acc.vec = numeric(n.samples)
+  eta[1,] = init
+  mod.curr = fit.inla(data, eta[1,])
+  mlik[1] = mod.curr$mlik
+  starttime = Sys.time()
+  pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
+  i_marg = 0
+  N_marg = floor((n.samples - n.burnin)/n.thin)
+  times = numeric(N_marg)
+  margs = NA
+  for (i in seq(2,n.samples)){
     setTxtProgressBar(pb, i)
-    eta.new = r.prop(eta[i-1,])
-    mod.new = fit.inla(data, t(eta.new))
+    eta.new = r.prop(eta[i-1,],sigma = stdev.samp)
+    mod.new = fit.inla(data,eta.new)
     lacc1 = mod.new$mlik + prior(eta.new) + d.prop(eta.new, eta[i-1,])
     lacc2 = mod.curr$mlik + prior(eta[i-1,]) + d.prop(eta[i-1,], eta.new)
     acc = min(1,exp(lacc1 - lacc2))
@@ -17,8 +39,7 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
       mod.curr = mod.new
       mlik[i] = mod.new$mlik
       acc.vec[i] = T
-      
-    }else{
+    }else{ 
       eta[i,] = eta[i-1,]
       mlik[i] = mlik[i-1]
       acc.vec[i] = F
@@ -33,58 +54,10 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
   }
   eta = eta[-seq(n.burnin),]
   eta = eta[seq(from = 1, to = nrow(eta), by=n.thin),]
-  eta_kern = kde2d(x = eta[,1], y = eta[,2], n = 100, lims = c(0,4,-4,0))
-  eta_kern = data.frame(expand.grid(x=eta_kern$x, y=eta_kern$y), z=as.vector(eta_kern$z))
   return(list(eta = eta,
-              eta_kern = eta_kern,
               margs = lapply(margs, function(x){fit.marginals(rep(1,N_marg),x)}),
               acc.vec = acc.vec,
               mlik = mlik,
               times = times))
 }
-
-mcmc.w.inla <- function(data, prior, d.prop, r.prop, fit.inla,
-                        n.samples = 100, n.burnin = 5, n.thin = 1){
-  eta = matrix(data = NA,nrow = n.samples, ncol = ncol(data$x))
-  colnames(eta) = colnames(data$x)
-  mlik = numeric(n.samples)
-  acc.vec = numeric(n.samples)
-  eta[1,] = rep(0,n.beta)
-  mod.curr = fit.inla(data, beta[1,])
-  mlik[1] = mod.curr$mlik
-  starttime = Sys.time()
-  pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
-  i_marg = 0
-  N_marg = floor((n.samples - n.burnin)/n.thin)
-  times = numeric(N_marg)
-  margs = NA
-  for (i in seq(2,n.samples)){
-    setTxtProgressBar(pb, i)
-    eta.new = r.prop(beta[i-1,],sigma = stdev.samp)
-    mod.new = fit.inla(data,beta.new)
-    lacc1 = mod.new$mlik + prior.beta(beta.new) + dq.beta(beta.new, beta[i-1,])
-    lacc2 = mod.curr$mlik + prior.beta(beta[i-1,]) + dq.beta(beta[i-1,], beta.new)
-    acc = min(1,exp(lacc1 - lacc2))
-    if (runif(1) < acc){
-      beta[i,] = beta.new
-      mod.curr = mod.new
-      mlik[i] = mod.new$mlik
-      acc.vec[i] = T
-    }else{ 
-      beta[i,] = beta[i-1,]
-      mlik[i] = mlik[i-1]
-      acc.vec[i] = F
-    }
-    if(i == n.burnin){
-      post.marg = mod.curr$dists
-    }else if(i > n.burnin){
-      post.marg = moving.marginals(mod.curr$dists,
-                                   post.marg,
-                                   i-n.burnin+1)
-    }
-  }
-  return(list(beta = beta, 
-              post.marg = post.marg,
-              acc.vec = acc.vec,
-              mlik = mlik))
-}
+  
