@@ -41,6 +41,30 @@ calc.stats <- function(stats,weight){
   return(stats)
 }
 
+calc.delta <- function(N_t,eta,theta,t,d.prop){
+  tmp = 0
+  for (l in seq(t)){
+    tmp = tmp + N_t[l]*d.prop(x = eta, theta = theta, i_cur = l+1, log = FALSE)
+  }
+  return(tmp)
+}
+
+update.delta.weight <- function(delta,weight,N_t,eta,theta,t,mlik,prior,d.prop){
+  i_tmp = 0
+  N_tmp = sum(N_t[1:(t+1)])
+  for (l in seq(t)){
+    for (i in seq(N_t[l])){
+      i_tmp = i_tmp + 1
+      delta[i_tmp] = delta[i_tmp] + N_t[l]*d.prop(x = eta[i_tmp], theta = theta, i_cur = t+1, log = FALSE)
+      weight[i_tmp] = exp(mlik[i_tmp] + prior(eta[i_tmp]))/(delta[i_tmp]/N_tmp)
+    }
+  }
+  return(list(
+    delta = delta,
+    weight = weight
+  ))
+}
+
 store.stats <- function(stat,stats,j,n.prop){
   if (anyNA(stats)){
     stats = stat

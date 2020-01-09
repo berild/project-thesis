@@ -91,44 +91,6 @@ update.delta.weight <- function(delta,weight,N_t,eta,theta,t,mlik,prior,d.prop){
   ))
 }
 
-fit.marginals <- function(ws,margs,len = 400){
-  xmin <- min(margs[[1]])
-  xmax <- max(margs[[1]])
-  xx <- seq(xmin, xmax, len = len)
-  tot_ws = sum(ws)
-  marg = numeric(len)
-  for (i in seq(nrow(margs[[1]]))){
-    marg = marg + ws[i]/tot_ws*inla.dmarginal(xx, list(x = margs[[1]][i,], y = margs[[2]][i,]))
-  }
-  data.frame(x = xx, y = marg)
-}
-
-
-kde2d.weighted <- function (x, y, w, h, n = 25, lims = c(range(x), range(y))) {
-  nx <- length(x)
-  if (length(y) != nx) 
-    stop("data vectors must be the same length")
-  if (length(w) != nx & length(w) != 1)
-    stop("weight vectors must be 1 or length of data")
-  gx <- seq(lims[1], lims[2], length = n) 
-  gy <- seq(lims[3], lims[4], length = n) 
-  if (missing(h)) 
-    h <- c(bandwidth.nrd(x), bandwidth.nrd(y));
-  if (missing(w)) 
-    w <- numeric(nx)+1;
-  h <- h/4
-  ax <- outer(gx, x, "-")/h[1] 
-  ay <- outer(gy, y, "-")/h[2]
-  z <- (matrix(rep(w,n), nrow=n, ncol=nx, byrow=TRUE)*matrix(dnorm(ax), n, nx)) %*% t(matrix(dnorm(ay), n, nx))/(sum(w) * h[1] * h[2]) 
-  return(list(x = gx, y = gy, z = z))
-}
-
-calc.theta <- function(theta,weight,eta,i_tot,i_cur){
-  theta$a.mu[i_cur] = sum(eta[1:i_tot]*weight[1:i_tot])/sum(weight[1:i_tot])
-  theta$a.cov[i_cur] = sum(weight[1:i_tot]*(eta[1:i_tot]-theta$a.mu[i_cur])*(eta[1:i_tot]-theta$a.mu[i_cur]))/sum(weight[1:i_tot])
-  return(theta)
-}
-
 inla.w.amis <- function(data, prior, d.prop, r.prop, fit.inla, init.r.prop, init.d.prop, N_t = rep(20,20)){
   require(INLA)
   N_0 = round(sum(N_t)/2)
@@ -180,27 +142,4 @@ inla.w.amis <- function(data, prior, d.prop, r.prop, fit.inla, init.r.prop, init
               margs = lapply(margs, function(x){fit.marginals(weight,x)}),
               weight = weight))
 }
-
-
-
-
-set.seed(123)
-mod = inla.w.amis(data = df, prior.rho, dq.rho, rq.rho, fit.inla, init.rq.rho, init.dq.rho, N_t = rep(20,20))
-save(mod, file = "./sem/sem-amis-w-inla.Rdata")
-
-ggplot(data.frame(x= mod$eta, y = mod$weight/sum(mod$weight))) +
-  geom_line(aes(x = x, y = y))
-
-ggplot() + 
-  geom_line(data = mod$margs$intercept, aes(x = x, y = y, color = "AMIS with INLA"))
-
-ggplot() + 
-  geom_line(data = mod$margs$INC, aes(x = x, y = y, color = "AMIS with INLA"))
-
-ggplot() + 
-  geom_line(data = mod$margs$HOVAL, aes(x = x, y = y, color = "AMIS with INLA"))
-
-ggplot() + 
-  geom_line(data = mod$margs$tau, aes(x = x, y = y, color = "AMIS with INLA"))
-
 
