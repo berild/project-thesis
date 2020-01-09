@@ -89,5 +89,5 @@ source("./lasso/lasso_mcmc_w_inla.Rdata")
 mcmc_w_inla_mod = mcmc.w.inla(data = df, init = rep(0,ncol(df$x)), 
                               prior.beta, dq.beta, rq.beta, fit.inla, 
                               n.samples = 100500, n.burnin = 500, n.thin = 10)
-save(mod, file = "./lasso/sims/lasso-mcmc-w-inla.Rdata")
+save(mcmc_w_inla_mod, file = "./lasso/sims/lasso-mcmc-w-inla.Rdata")
 
