@@ -21,7 +21,7 @@
 # History files
 .Rhistory
 .Rapp.history
-
+**/old/
 
 # User-specific files
 .Ruserdata
