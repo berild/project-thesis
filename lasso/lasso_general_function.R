@@ -12,7 +12,7 @@ fit.inla <- function(data, beta) {
 }
 
 
-prior.beta <- function(x, mu = 0, lambda = bestlam, log = TRUE) {
+prior.beta <- function(x, mu = 0, lambda = 0.073, log = TRUE) {
   res <- sum(log(ddoublex(x, mu = mu, lambda = lambda)))
   
   if(!log) { res <- exp(res) }
@@ -23,10 +23,12 @@ prior.beta <- function(x, mu = 0, lambda = bestlam, log = TRUE) {
 
 dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
   dmvnorm(y, mean = x, sigma = sigma, log = log)
+  #rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted")
 }
 
 rq.beta <- function(x, sigma = stdev.samp) {
   rmvnorm(1, mean = x, sigma = sigma)
+  #rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted")
 }
 
 
@@ -87,18 +89,23 @@ store.post <- function(marg,margs,j,n.prop){
   }
 }
 
-running.ESS <- function(eta, ws = NA){
+running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
   if (anyNA(ws)){
     require(coda)
     ess = unlist(lapply(sapply(seq(nrow(eta)),function(x){
       effectiveSize(eta[1:x,])
     }),min))
   }else{
+    if (norm){
+      ws = ws/sum(ws)
+    }
     ess = unlist(sapply(seq(length(ws)),function(x){
       sum(ws[1:x])^2/(sum(ws[1:x]^2))
     }))
   }
-  return(ess)
+  ess.df = data.frame(time = times[seq(1,length(times),step)],
+                      ess = ess[seq(1,length(times),step)])
+  return(ess.df)
 }
 
 fit.marginals <- function(ws,margs,len = 400){
