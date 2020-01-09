@@ -1,6 +1,19 @@
 require(INLA)
 require(mvtnorm)
 require(MASS)
+require(coda)
+
+
+fit.inla <- function(data, beta){
+  data$oset = data$x%*%t(beta)
+  res = inla(y~1+offset(oset), data = data)
+  return(list(mlik = res$mlik[1],
+              dists = list(intercept = res$marginals.fixed[[1]], 
+                           tau = res$marginals.hyperpar[[1]]),
+              stats = list(intercept = as.numeric(res$summary.fixed[1]),
+                           tau  = as.numeric(res$summary.hyperpar[1]))))
+}
+
 
 prior.beta <- function(x, sigma = sqrt(1/.001), log = TRUE) {
   sum(dnorm(x, mean = 0, sd= sigma, log = log))
@@ -12,7 +25,8 @@ calc.theta <- function(theta,weight,eta,i_tot,i_cur){
   }
   for (i in seq(ncol(eta))){
     for (j in seq(i,ncol(eta))){
-      theta$a.cov[i,j,i_cur] = theta$a.cov[j,i,i_cur] = sum(weight[1:i_tot]*(eta[1:i_tot,i]-theta$a.mu[i_cur,i])*(eta[1:i_tot,j]-theta$a.mu[i_cur,j]))/(sum(weight[1:i_tot]))
+      theta$a.cov[i,j,i_cur] = theta$a.cov[j,i,i_cur] = sum(weight[1:i_tot]*(eta[1:i_tot,i]-theta$a.mu[i_cur,i])*
+                                                              (eta[1:i_tot,j]-theta$a.mu[i_cur,j]))/(sum(weight[1:i_tot]))
     }
   }
   return(theta)
@@ -111,14 +125,4 @@ kde2d.weighted <- function (x, y, w, h, n = 25, lims = c(range(x), range(y))) {
   ay <- outer(gy, y, "-")/h[2]
   z <- (matrix(rep(w,n), nrow=n, ncol=nx, byrow=TRUE)*matrix(dnorm(ax), n, nx)) %*% t(matrix(dnorm(ay), n, nx))/(sum(w) * h[1] * h[2]) 
   return(list(x = gx, y = gy, z = z))
-}
-
-fit.inla <- function(data, beta){
-  data$oset = data$x%*%t(beta)
-  res = inla(y~1+offset(oset), data = data)
-  return(list(mlik = res$mlik[1],
-              dists = list(intercept = res$marginals.fixed[[1]], 
-                           tau = res$marginals.hyperpar[[1]]),
-              stats = list(intercept = as.numeric(res$summary.fixed[1]),
-                           tau  = as.numeric(res$summary.hyperpar[1]))))
 }
