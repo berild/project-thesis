@@ -62,7 +62,7 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
   }
   N_tot = N_0 + sum(N_t)
   mlik = numeric(N_tot)
-  eta = matrix(NA, ncol = length(init), nrow = N_tot)
+  eta = matrix(NA, ncol = length(init$mu), nrow = N_tot)
   delta = numeric(N_tot)
   weight = numeric(N_tot)
   times = numeric(N_tot)
