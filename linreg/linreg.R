@@ -26,28 +26,23 @@ save(inla_mod, file = "./linreg/sims/linreg-inla.Rdata")
 # finding maximum likelihood
 ml = summary(lm(y~x, data = df))$coefficients[,1:2]
 
-# fitting inla condtitioned on ml
-#source("./linreg/linreg_ml_w_inla.R")
-#ml_w_inla_mod = fit.inla.ml(df,ml)
-#save(ml_w_inla_mod, file = "./linreg/sims/linreg-ml-w-inla.Rdata")
-
-# fitting inla conditioned on point patterns
 source("./linreg/linreg_general_functions.R")
-#source("./linreg/linreg_pp_w_inla.R")
-#pp_w_inla_mod <- pp.w.inla(df, ml[-1,], fit.inla, prior.beta, len = 20)
-#save(pp_w_inla_mod, file = "./linreg/sims/linreg-pp-w-inla.Rdata")
 
 # fitting inla conditioned on samples from is
 source("./linreg/linreg_is_w_inla.R")
-is_w_inla_mod <- is.w.inla(data = df, init = list(mu = c(0,0), cov = diag(5,2,2)), prior.beta, dq.beta, rq.beta, N_0 = 800, N = 10000)
+is_w_inla_mod <- is.w.inla(data = df, init = list(mu = c(0,0), cov = diag(5,2,2)), 
+                           prior.beta, dq.beta, rq.beta, N_0 = 800, N = 10000)
 save(is_w_inla_mod, file = "./linreg/sims/linreg-is-w-inla.Rdata")
 
 # fitting inla conditioned on samples from amis
 source("./linreg/linreg_amis_w_inla.R")
-amis_w_inla_mod <- amis.w.inla(data = df, init = list(mu = c(0,0), cov = diag(5,2,2)), prior.beta, dq.beta, rq.beta, fit.inla, N_t = seq(25,50,1)*10, N_0 = 250)
+amis_w_inla_mod <- amis.w.inla(data = df, init = list(mu = c(0,0), cov = diag(5,2,2)), 
+                               prior.beta, dq.beta, rq.beta, fit.inla, N_t = seq(25,50,1)*10, N_0 = 250)
 save(amis_w_inla_mod, file = "./linreg/sims/linreg-amis-w-inla.Rdata")
 
 # fitting inla conditioned on samples from mh
 source("./linreg/linreg_mcmc_w_inla.R")
-mcmc_w_inla_mod <- mcmc.w.inla(data = df, init = c(0,0), prior.beta, dq.beta, rq.beta, fit.inla, n.samples = 100500, n.burnin = 500, n.thin = 10)
+mcmc_w_inla_mod <- mcmc.w.inla(data = df, init = c(0,0), 
+                               prior.beta, dq.beta, rq.beta, fit.inla, 
+                               n.samples = 100500, n.burnin = 500, n.thin = 10)
 save(mcmc_w_inla_mod, file = "./linreg/sims/linreg-mcmc-w-inla.Rdata")
