@@ -1,9 +1,6 @@
 library(ggplot2)
 
 ## loading simulation results
-#load(file = "./lasso/sims/lasso-inla.Rdata")
-#load(file = "./lasso/sims/lasso-ml-w-inla.Rdata")
-#load(file = "./lasso/sims/lasso-pp-w-inla.Rdata")
 load(file = "./lasso/sims/lasso-is-w-inla.Rdata")
 load(file = "./lasso/sims/lasso-amis-w-inla.Rdata")
 load(file = "./lasso/sims/lasso-mcmc-w-inla.Rdata")
@@ -13,8 +10,8 @@ height = 5
 
 p1 <- ggplot() + 
   geom_line(data = amis_w_inla_mod$margs$tau, aes(x = x, y = y, color = "AMIS with INLA")) + 
-  #geom_line(data = is_w_inla_mod$margs$tau, aes(x = x, y = y, color = "IS with INLA")) +
-  #geom_line(data = mcmc_w_inla_mod$margs$tau, aes(x = x, y = y, color = "MCMC with INLA")) + 
+  geom_line(data = is_w_inla_mod$margs$tau, aes(x = x, y = y, color = "IS with INLA")) +
+  geom_line(data = mcmc_w_inla_mod$margs$tau, aes(x = x, y = y, color = "MCMC with INLA")) + 
   labs(color = "",x="",y="",title=expression(tau)) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
