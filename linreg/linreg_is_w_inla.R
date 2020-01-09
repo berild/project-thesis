@@ -64,7 +64,7 @@ is.w.inla <- function(data, init, prior, d.prop, r.prop, N_0 = 200, N = 400){
     times[i] = as.numeric(difftime(is.list[[i]]$times,starttime,units = "secs"))
   }
   weight = exp(weight - max(weight))
-  eta_kern = kde2d.weighted(x = eta[,1], y = eta[,2], w = weight/(sum(weight)), n = 100, lims = c(1,3,-3,-1))
+  eta_kern = kde2d.weighted(x = eta[,1], y = eta[,2], w = weight/(sum(weight)), n = 100, lims = c(0,4,-4,0))
   eta_kern = data.frame(expand.grid(x=eta_kern$x, y=eta_kern$y), z=as.vector(eta_kern$z))
   return(list(eta = eta,
               theta = theta,

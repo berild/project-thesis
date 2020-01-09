@@ -51,7 +51,7 @@ mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
   }
   eta = eta[-seq(n.burnin),]
   eta = eta[seq(from = 1, to = nrow(eta), by=n.thin),]
-  eta_kern = kde2d(x = eta[,1], y = eta[,2], n = 100, lims = c(1,3,-3,-1))
+  eta_kern = kde2d(x = eta[,1], y = eta[,2], n = 100, lims = c(0,4,-4,0))
   eta_kern = data.frame(expand.grid(x=eta_kern$x, y=eta_kern$y), z=as.vector(eta_kern$z))
   return(list(eta = eta,
               eta_kern = eta_kern,
