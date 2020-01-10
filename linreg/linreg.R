@@ -31,7 +31,7 @@ source("./linreg/linreg_general_functions.R")
 # fitting inla conditioned on samples from is
 source("./linreg/linreg_is_w_inla.R")
 is_w_inla_mod <- is.w.inla(data = df, init = list(mu = c(0,0), cov = diag(5,2,2)), 
-                           prior.beta, dq.beta, rq.beta, N_0 = 800, N = 10000)
+                           prior.beta, dq.beta, rq.beta, fit.inla, N_0 = 800, N = 10000)
 save(is_w_inla_mod, file = "./linreg/sims/linreg-is-w-inla.Rdata")
 
 # fitting inla conditioned on samples from amis

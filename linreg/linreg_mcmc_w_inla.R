@@ -9,7 +9,7 @@ dq.beta <- function(y, x, sigma = .75, log =TRUE) {
   sum(dnorm(x, mean = y, sd = sigma, log = log))
 }
 
-mcmc.w.inla <- function(data,init, prior, d.prop, r.prop, fit.inla,
+mcmc.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla,
                         n.samples = 100, n.burnin = 5, n.thin = 1){
   eta = matrix(NA, ncol = length(init), nrow = n.samples)
   mlik = numeric(n.samples)

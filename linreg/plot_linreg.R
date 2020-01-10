@@ -1,5 +1,7 @@
 library(ggplot2)
 library(scales)
+library(ggpubr)
+
 ## loading simulation results
 load(file = "./linreg/sims/linreg-inla.Rdata")
 #load(file = "./linreg/sims/linreg-ml-w-inla.Rdata")
