@@ -2,12 +2,12 @@ require(INLA)
 require(mvtnorm)
 require(parallel)
 
-dq.beta <- function(y, x, sigma = diag(5,2,2), log =TRUE) {
+dq.beta <- function(y, x, sigma = stdev.samp, log =TRUE) {
   #dmvnorm(y,mean = x, sigma = sigma,log = log)
   dmvt(y,delta=x,sigma=sigma,df=1,log=log,type = "shifted")
 }
 
-rq.beta <- function(x=c(0,0), sigma = diag(5,2,2)) {
+rq.beta <- function(x, sigma = stdev.samp) {
   #rmvnorm(1,mean=x,sigma = sigma)
   as.vector(rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted"))
 }
@@ -20,7 +20,7 @@ par.is <- function(x, data, theta, t, prior, d.prop, r.prop, fit.inla){
 }
 
 
-is.w.inla <- function(data, init, prior, d.prop, r.prop, N_0 = 200, N = 400){
+is.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_0 = 200, N = 400){
   eta = matrix(NA, ncol = length(init$mu), nrow = N_0)
   weight = numeric(N_0)
   if (detectCores()>10){
