@@ -1,38 +1,242 @@
-# INLA within McMC
-load(file = "missing-mcmc-w-inla.Rdata")
-res = cbind(data.frame(step = seq(nrow(mod$x.mis))),as.data.frame(mod$x.mis))
-params = colnames(res[,-c(1)])
-res$is_burnin = c(rep(T,5),rep(F,nrow(res)-5))
+library(ggplot2)
+library(scales)
+library(ggpubr)
 
-means = data.frame(key = params, 
-                   value = c(sapply(res[res$is_burnin==F,params],mean)))
+## loading simulation results
+load(file = "./missing/sims/missing-is-w-inla.Rdata")
+load(file = "./missing/sims/missing-amis-w-inla.Rdata")
+load(file = "./missing/sims/missing-mcmc-w-inla.Rdata")
 
-res = gather(res,key,value,params)
-res$key=factor(res$key,levels=params)
-res2 = rbind(
-  cbind(key = rep("beta0",nrow(mod$beta0)),mod$beta0),
-  cbind(key = rep("beta1",nrow(mod$beta1)),mod$beta1),
-  cbind(key = rep("beta2",nrow(mod$beta2)),mod$beta2),
-  cbind(key = rep("beta3",nrow(mod$beta3)),mod$beta3),
-  cbind(key = rep("tau",nrow(mod$tau)),mod$tau)
-)
+width = 5
+height = 5
 
-traceplot <- ggplot(res, aes(x = step, y = value, color = is_burnin)) +
-  geom_line() +
-  facet_wrap(vars(key),scales="free",ncol = 2)
+p1 <- ggplot() + 
+  geom_line(data = amis_w_inla_mod$margs$beta0, aes(x=x,y=y,color="AMIS with INLA")) + 
+  geom_line(data = is_w_inla_mod$margs$beta0, aes(x=x,y=y,color="IS with INLA")) +
+  #geom_line(data = mcmc_w_inla_mod$margs$beta0, aes(x=x,y=y,color="MCMC with INLA")) +
+  labs(color = "",x="",y="",title=expression(beta[0])) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p1
+ggsave(filename = "missing_beta0.pdf", plot = p1, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+  
+p2 <- ggplot() + 
+  geom_line(data = amis_w_inla_mod$margs$beta1, aes(x=x,y=y,color="AMIS with INLA")) + 
+  geom_line(data = is_w_inla_mod$margs$beta1, aes(x=x,y=y,color="IS with INLA")) +
+  #geom_line(data = mcmc_w_inla_mod$margs$beta1, aes(x=x,y=y,color="MCMC with INLA")) +
+  labs(color = "",x="",y="",title=expression(beta[1])) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p2
+ggsave(filename = "missing_beta1.pdf", plot = p2, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
 
-traceplot
+p3 <- ggplot() + 
+  geom_line(data = amis_w_inla_mod$margs$beta2, aes(x=x,y=y,color="AMIS with INLA")) + 
+  geom_line(data = is_w_inla_mod$margs$beta2, aes(x=x,y=y,color="IS with INLA")) +
+  #geom_line(data = mcmc_w_inla_mod$margs$beta2, aes(x=x,y=y,color="MCMC with INLA")) +
+  labs(color = "",x="",y="",title=expression(beta[2])) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p3
+ggsave(filename = "missing_beta2.pdf", plot = p3, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
 
-distplot <- ggplot(res[res$is_burnin==F,]) +
-  geom_density(aes(x = value),fill = "deepskyblue" , alpha = 0.5) +
-  geom_vline(data = means,aes(xintercept = value),color = "firebrick") + 
-  geom_text(data = means,aes(label = sprintf("%.3f",value), x = value), 
-            y = 0.02, size = 6,color = "firebrick") + 
-  facet_wrap(vars(key),scales="free",ncol = 2)
+p4 <- ggplot() + 
+  geom_line(data = amis_w_inla_mod$margs$beta3, aes(x=x,y=y,color="AMIS with INLA")) + 
+  geom_line(data = is_w_inla_mod$margs$beta3, aes(x=x,y=y,color="IS with INLA")) +
+  #geom_line(data = mcmc_w_inla_mod$margs$beta3, aes(x=x,y=y,color="MCMC with INLA")) +
+  labs(color = "",x="",y="",title=expression(beta[3])) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p4
+ggsave(filename = "missing_beta3.pdf", plot = p4, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
 
-distplot
+p5 <- ggplot() + 
+  geom_line(data = amis_w_inla_mod$margs$tau, aes(x=x,y=y,color="AMIS with INLA")) + 
+  geom_line(data = is_w_inla_mod$margs$tau, aes(x=x,y=y,color="IS with INLA")) +
+  #geom_line(data = mcmc_w_inla_mod$margs$beta0, aes(x=x,y=y,color="MCMC with INLA")) +
+  labs(color = "",x="",y="",title=expression(tau)) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p5
+ggsave(filename = "missing_tau.pdf", plot = p5, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
 
-inladist <- ggplot(res2, aes(x = x, y = y)) + 
-  geom_line(color = "deepskyblue") + 
-  facet_wrap(.~key,scales = "free", ncol = 2)
-inladist
+
+
+multi_to_uni_kde <- function(eta,weight=NA,interval=NA,binwidth=50){
+  if (anyNA(weight)){
+    weight = 1
+  }else{
+    weight = weight/sum(weight)
+  }
+  if (anyNA(interval)){
+    xseq = seq(min(eta),max(eta),length.out = binwidth+1) 
+  }else{
+    xseq = seq(interval[1],interval[2],length.out = binwidth+1)
+  }
+  uni_kern = data.frame(x = xseq[-(binwidth+1)] + 1/2*(xseq[2]-xseq[1]),
+                        y = rep(0,binwidth))
+  int_kern = 0
+  for (j in seq(2,binwidth+1)){
+    uni_kern$y[j-1] = sum(weight[(xseq[j-1]<=eta)&(xseq[j]>eta)])
+    int_kern = int_kern + uni_kern$y[j-1]*(xseq[j]-xseq[j-1])
+  }
+  uni_kern$y = uni_kern$y/int_kern
+  uni_spline = smooth.spline(uni_kern)
+  uni_kern = as.data.frame(predict(uni_spline,x=seq(xseq[1],xseq[binwidth+1],length.out = 4*binwidth)))
+  return(uni_kern)
+}
+
+amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight/sum(amis_w_inla_mod$weight))
+is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight/sum(is_w_inla_mod$weight))
+mcmc_w_inla_mod$ess = running.ESS(mcmc_w_inla_mod$eta,mcmc_w_inla_mod$times)
+
+p15 <- ggplot() + 
+  #geom_hline(yintercept = 10000) + 
+  geom_line(data = is_w_inla_mod$ess, aes(x = time, y = ess, color = "IS with INLA"))+
+  geom_line(data = amis_w_inla_mod$ess, aes(x = time, y = ess, color = "AMIS with INLA")) + 
+  #geom_line(data = mcmc_w_inla_mod$ess, aes(x = time, y = ess, color = "MCMC with INLA")) + 
+  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  annotation_logticks() + 
+  labs(color = "",x="Runtime (secs)",y="Effective sample size") + 
+  #coord_cartesian(xlim=c(min(amis_w_inla_mod$ess$time),max(mcmc_w_inla_mod$ess$time))) + 
+  theme_bw() + 
+  theme(legend.position="bottom")
+p15
+ggsave(filename = "missing_ess_plot.pdf", plot = p15, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+
+ptot1 <- ggarrange(p1, p2, p3, p4, p5, p15, ncol=2, nrow=3, common.legend = TRUE, legend="bottom")
+ptot1
+ggsave(filename = "missing_tot1.pdf", plot = ptot1, device = NULL, path = "./missing/figures/",
+       scale = 1, width = 2*width, height = 3*height, units = "in", dpi=5000)
+
+amis_kern1 = multi_to_uni_kde(amis_w_inla_mod$eta[,1],amis_w_inla_mod$weight,binwidth=15)
+is_kern1 = multi_to_uni_kde(is_w_inla_mod$eta[,1],is_w_inla_mod$weight,binwidth=15)
+amis_kern2 = multi_to_uni_kde(amis_w_inla_mod$eta[,2],amis_w_inla_mod$weight,binwidth=15)
+is_kern2 = multi_to_uni_kde(is_w_inla_mod$eta[,2],is_w_inla_mod$weight,binwidth=15)
+amis_kern3 = multi_to_uni_kde(amis_w_inla_mod$eta[,3],amis_w_inla_mod$weight,binwidth=15)
+is_kern3 = multi_to_uni_kde(is_w_inla_mod$eta[,3],is_w_inla_mod$weight,binwidth=15)
+amis_kern4 = multi_to_uni_kde(amis_w_inla_mod$eta[,4],amis_w_inla_mod$weight,binwidth=15)
+is_kern4 = multi_to_uni_kde(is_w_inla_mod$eta[,4],is_w_inla_mod$weight,binwidth=15)
+amis_kern5 = multi_to_uni_kde(amis_w_inla_mod$eta[,5],amis_w_inla_mod$weight,binwidth=15)
+is_kern5 = multi_to_uni_kde(is_w_inla_mod$eta[,5],is_w_inla_mod$weight,binwidth=15)
+amis_kern6 = multi_to_uni_kde(amis_w_inla_mod$eta[,6],amis_w_inla_mod$weight,binwidth=15)
+is_kern6 = multi_to_uni_kde(is_w_inla_mod$eta[,6],is_w_inla_mod$weight,binwidth=15)
+amis_kern7 = multi_to_uni_kde(amis_w_inla_mod$eta[,7],amis_w_inla_mod$weight,binwidth=15)
+is_kern7 = multi_to_uni_kde(is_w_inla_mod$eta[,7],is_w_inla_mod$weight,binwidth=15)
+amis_kern8 = multi_to_uni_kde(amis_w_inla_mod$eta[,8],amis_w_inla_mod$weight,binwidth=15)
+is_kern8 = multi_to_uni_kde(is_w_inla_mod$eta[,8],is_w_inla_mod$weight,binwidth=15)
+amis_kern9 = multi_to_uni_kde(amis_w_inla_mod$eta[,9],amis_w_inla_mod$weight,binwidth=15)
+is_kern9 = multi_to_uni_kde(is_w_inla_mod$eta[,9],is_w_inla_mod$weight,binwidth=15)
+
+
+
+obs.names = sprintf("Observation %d",df$idx.mis)
+p6 <-ggplot() + 
+  geom_line(data=amis_kern1, aes(x=x,y=y,color="AMIS with INLA")) +
+  geom_line(data=is_kern1, aes(x=x,y=y,color="IS with INLA")) + 
+  #geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,1]), aes(x=x,color="MCMC with INLA")) + 
+  labs(color = "",x="",y="",title=obs.names[1]) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p6
+ggsave(filename = "missing_obs1.pdf", plot = p6, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+
+p7 <-ggplot() + 
+  geom_line(data=amis_kern2, aes(x=x,y=y,color="AMIS with INLA")) +
+  geom_line(data=is_kern2, aes(x=x,y=y,color="IS with INLA")) + 
+  #geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,2]), aes(x=x,color="MCMC with INLA")) + 
+  labs(color = "",x="",y="",title=obs.names[2]) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p7
+ggsave(filename = "missing_obs2.pdf", plot = p7, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+p8 <-ggplot() + 
+  geom_line(data=amis_kern3, aes(x=x,y=y,color="AMIS with INLA")) +
+  geom_line(data=is_kern3, aes(x=x,y=y,color="IS with INLA")) + 
+  #geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,3]), aes(x=x,color="MCMC with INLA")) + 
+  labs(color = "",x="",y="",title=obs.names[3]) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p8
+ggsave(filename = "missing_obs3.pdf", plot = p8, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+
+p9 <-ggplot() + 
+  geom_line(data=amis_kern4, aes(x=x,y=y,color="AMIS with INLA")) +
+  geom_line(data=is_kern4, aes(x=x,y=y,color="IS with INLA")) + 
+  #geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,4]), aes(x=x,color="MCMC with INLA")) + 
+  labs(color = "",x="",y="",title=obs.names[4]) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p9
+ggsave(filename = "missing_obs4.pdf", plot = p9, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+
+p10 <-ggplot() + 
+  geom_line(data=amis_kern5, aes(x=x,y=y,color="AMIS with INLA")) +
+  geom_line(data=is_kern5, aes(x=x,y=y,color="IS with INLA")) + 
+  #geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,5]), aes(x=x,color="MCMC with INLA")) + 
+  labs(color = "",x="",y="",title=obs.names[5]) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p10
+ggsave(filename = "missing_obs5.pdf", plot = p10, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+
+p11 <-ggplot() + 
+  geom_line(data=amis_kern6, aes(x=x,y=y,color="AMIS with INLA")) +
+  geom_line(data=is_kern6, aes(x=x,y=y,color="IS with INLA")) + 
+  #geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,6]), aes(x=x,color="MCMC with INLA")) + 
+  labs(color = "",x="",y="",title=obs.names[6]) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p11
+ggsave(filename = "missing_obs6.pdf", plot = p11, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+
+p12 <-ggplot() + 
+  geom_line(data=amis_kern7, aes(x=x,y=y,color="AMIS with INLA")) +
+  geom_line(data=is_kern7, aes(x=x,y=y,color="IS with INLA")) + 
+  #geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,7]), aes(x=x,color="MCMC with INLA")) + 
+  labs(color = "",x="",y="",title=obs.names[7]) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p12
+ggsave(filename = "missing_obs7.pdf", plot = p12, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+
+p13 <-ggplot() + 
+  geom_line(data=amis_kern8, aes(x=x,y=y,color="AMIS with INLA")) +
+  geom_line(data=is_kern8, aes(x=x,y=y,color="IS with INLA")) + 
+  #geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,8]), aes(x=x,color="MCMC with INLA")) + 
+  labs(color = "",x="",y="",title=obs.names[8]) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p13
+ggsave(filename = "missing_obs8.pdf", plot = p13, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+
+p14 <-ggplot() + 
+  geom_line(data=amis_kern9, aes(x=x,y=y,color="AMIS with INLA")) +
+  geom_line(data=is_kern9, aes(x=x,y=y,color="IS with INLA")) + 
+  #geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,9]), aes(x=x,color="MCMC with INLA")) + 
+  labs(color = "",x="",y="",title=obs.names[9]) + 
+  theme_bw() + 
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+p14
+ggsave(filename = "missing_obs9.pdf", plot = p14, device = NULL, path = "./missing/figures/",
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
+
+ptot2 <- ggarrange(p6, p7, p8, p9, p10, p11, p12, p13, p14, ncol=3, nrow=3, common.legend = TRUE, legend="bottom")
+ptot2
+ggsave(filename = "missing_tot2.pdf", plot = ptot2, device = NULL, path = "./missing/figures/",
+       scale = 1, width = 3*width, height = 3*height, units = "in", dpi=5000)
