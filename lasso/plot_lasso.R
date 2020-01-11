@@ -47,7 +47,7 @@ multi_to_uni_kde <- function(eta,weight=NA,interval=NA,binwidth=50){
   return(uni_kern)
 }
 
-amis_kern1 = multi_to_uni_kde(amis_w_inla_mod$eta[,1],amis_w_inla_mod$weight,c(-0.5,0.5),binwidth=15)
+amis_kern1 = multi_to_uni_kde(amis_w_inla_mod$eta[,1],amis_w_inla_mod$weight,c(-0.5,0.5),binwidth=100)
 is_kern1 = multi_to_uni_kde(is_w_inla_mod$eta[,1],is_w_inla_mod$weight,c(-0.5,0.5),binwidth=15)
 amis_kern2 = multi_to_uni_kde(amis_w_inla_mod$eta[,2],amis_w_inla_mod$weight,c(-0.3,0.6),binwidth=15)
 is_kern2 = multi_to_uni_kde(is_w_inla_mod$eta[,2],is_w_inla_mod$weight,c(-0.5,0.5),binwidth=15)
@@ -58,10 +58,34 @@ is_kern4 = multi_to_uni_kde(is_w_inla_mod$eta[,4],is_w_inla_mod$weight,c(-0.5,0.
 amis_kern5 = multi_to_uni_kde(amis_w_inla_mod$eta[,5],amis_w_inla_mod$weight,c(-0.2,0.6),binwidth=15)
 is_kern5 = multi_to_uni_kde(is_w_inla_mod$eta[,5],is_w_inla_mod$weight,c(-0.5,0.5),binwidth=15)
 
+a = density(x = is_w_inla_mod$eta[,1],
+            bw=0.05,
+            weights = is_w_inla_mod$weight/sum(is_w_inla_mod$weight),
+            from = -0.6, to = 0.6, kernel = "gaussian")
+ggplot(data.frame(x=a$x, y = a$y), aes(x=x,y=y)) + 
+  geom_line()
+
+amis_kerns = lapply(seq(ncol(amis_w_inla_mod$eta)), function(x){
+  as.data.frame(density(x = amis_w_inla_mod$eta[,x],
+                        bw = 0.005,
+                        weights = amis_w_inla_mod$weight/sum(amis_w_inla_mod$weight),
+                        from = -0.6, to = 0.6, kernel = "gaussian")[c(1,2)])
+})
+is_kerns = lapply(seq(ncol(is_w_inla_mod$eta)), function(x){
+  as.data.frame(density(x = is_w_inla_mod$eta[,x],
+                        weights = is_w_inla_mod$weight/sum(is_w_inla_mod$weight),
+                        from = -0.6, to = 0.6, kernel = "gaussian")[c(1,2)])
+})
+mcmc_kerns = lapply(seq(ncol(mcmc_w_inla_mod$eta)), function(x){
+  as.data.frame(density(x = mcmc_w_inla_mod$eta[,x],
+                        from = -0.6, to = 0.6, kernel = "gaussian")[c(1,2)])
+})
+
+
 p2 <-ggplot() + 
-  geom_line(data=amis_kern1, aes(x=x,y=y,color="AMIS with INLA")) +
-  geom_line(data=is_kern1, aes(x=x,y=y,color="IS with INLA")) + 
-  geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,1]), aes(x=x,color="MCMC with INLA")) + 
+  geom_line(data = amis_kerns[[1]], aes(x=x,y=y,color="AMIS with INLA")) +
+  #geom_line(data= is_kerns[[1]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data= mcmc_kerns[[1]], aes(x=x,y=y,color="MCMC with INLA")) + 
   labs(color = "",x="",y="",title=expression(beta[1])) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
@@ -70,9 +94,9 @@ ggsave(filename = "lasso_b1_plot.pdf", plot = p2, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p3 <-ggplot() + 
-  geom_line(data=amis_kern2, aes(x=x,y=y,color="AMIS with INLA")) +
-  geom_line(data=is_kern2, aes(x=x,y=y,color="IS with INLA")) + 
-  geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,2]), aes(x=x,color="MCMC with INLA")) + 
+  geom_line(data = amis_kerns[[2]], aes(x=x,y=y,color="AMIS with INLA")) +
+  #geom_line(data= is_kerns[[2]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data= mcmc_kerns[[2]], aes(x=x,y=y,color="MCMC with INLA")) + 
   labs(color = "",x="",y="",title=expression(beta[2])) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
@@ -81,9 +105,9 @@ ggsave(filename = "lasso_b2_plot.pdf", plot = p3, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p4 <-ggplot() + 
-  geom_line(data=amis_kern3, aes(x=x,y=y,color="AMIS with INLA")) +
-  geom_line(data=is_kern3, aes(x=x,y=y,color="IS with INLA")) + 
-  geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,3]), aes(x=x,color="MCMC with INLA")) + 
+  geom_line(data = amis_kerns[[3]], aes(x=x,y=y,color="AMIS with INLA")) +
+  #geom_line(data= is_kerns[[3]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data= mcmc_kerns[[3]], aes(x=x,y=y,color="MCMC with INLA")) + 
   labs(color = "",x="",y="",title=expression(beta[3])) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
@@ -92,19 +116,20 @@ ggsave(filename = "lasso_b3_plot.pdf", plot = p4, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p5 <-ggplot() + 
-  geom_line(data=amis_kern4, aes(x=x,y=y,color="AMIS with INLA")) +
-  geom_line(data=is_kern4, aes(x=x,y=y,color="IS with INLA")) + 
-  geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,4]), aes(x=x,color="MCMC with INLA")) + 
+  geom_line(data = amis_kerns[[4]], aes(x=x,y=y,color="AMIS with INLA")) +
+  #geom_line(data= is_kerns[[4]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data= mcmc_kerns[[4]], aes(x=x,y=y,color="MCMC with INLA")) + 
   labs(color = "",x="",y="",title=expression(beta[4])) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p5
 ggsave(filename = "lasso_b4_plot.pdf", plot = p5, device = NULL, path = "./lasso/figures/",
        scale = 1, width = width, height = height, units = "in", dpi=5000)
+
 p6 <-ggplot() + 
-  geom_line(data=amis_kern5, aes(x=x,y=y,color="AMIS with INLA")) +
-  geom_line(data=is_kern5, aes(x=x,y=y,color="IS with INLA")) + 
-  geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,5]), aes(x=x,color="MCMC with INLA")) + 
+  geom_line(data = amis_kerns[[5]], aes(x=x,y=y,color="AMIS with INLA")) +
+  #geom_line(data= is_kerns[[5]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data= mcmc_kerns[[5]], aes(x=x,y=y,color="MCMC with INLA")) + 
   labs(color = "",x="",y="",title=expression(beta[5])) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
