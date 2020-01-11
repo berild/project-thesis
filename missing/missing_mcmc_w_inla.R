@@ -1,7 +1,7 @@
 require(INLA)
 
 
-dq.x.mis <- function(x, y, sigma = sqrt(1/0.001), log =TRUE) {
+dq.x.mis <- function(x, y, sigma = sqrt(1/0.1), log =TRUE) {
   res <- dnorm(y, mean = x, sd = sigma, log = log)
   
   if(log) {
@@ -11,7 +11,7 @@ dq.x.mis <- function(x, y, sigma = sqrt(1/0.001), log =TRUE) {
   }
 }
 
-rq.x.mis <- function(x, sigma = sqrt(1/0.001)) {
+rq.x.mis <- function(x, sigma = sqrt(1/0.1)) {
   rnorm(length(x), mean = x, sd = sigma)
 }
 
