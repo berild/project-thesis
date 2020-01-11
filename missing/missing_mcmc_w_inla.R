@@ -21,7 +21,7 @@ mcmc.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla,
   mlik = numeric(n.samples)
   acc.vec = numeric(n.samples)
   eta[1,] = init
-  mod.curr = fit.inla(data, t(eta[1,]))
+  mod.curr = fit.inla(data, eta[1,])
   mlik[1] = mod.curr$mlik
   starttime = Sys.time()
   pb <- txtProgressBar(min = 0, max = n.samples, style = 3)

@@ -3,11 +3,11 @@ require(mvtnorm)
 require(MASS)
 require(coda)
 
-fit.inla <- function(data, eta) { 
+fit.inla <- function(data, beta) { 
   
-  data$d.mis$bmi[data$idx.mis] <- eta
+  data$d.mis$bmi[data$idx.mis] = beta
   
-  res <- inla(chl ~ 1 + bmi + age, data = data$d.mis)
+  res = inla(chl ~ 1 + bmi + age, data = data$d.mis)
   
   return(list(mlik = res$mlik[[1]], 
               dists = list(beta0 = res$marginals.fixed[[1]], 

@@ -16,8 +16,8 @@ df = list(d.mis = d.mis, idx.mis = idx.mis)
 init = list(mu = rep(mean(df$d.mis$bmi, na.rm = TRUE),n.mis),
             cov = diag(2*var(df$d.mis$bmi, na.rm = TRUE),n.mis,n.mis))
 
-names(init$mu) = sprintf("Observation_%d",df$idx.mis)
-colnames(init$cov) = sprintf("Observation_%d",df$idx.mis)
+#names(init$mu) = sprintf("Observation_%d",df$idx.mis)
+#colnames(init$cov) = sprintf("Observation_%d",df$idx.mis)
 
 source("./missing/missing_general_function.R")
 
