@@ -1,17 +1,11 @@
 require(INLA)
 
 
-dq.x.mis <- function(x, y, sigma = sqrt(1/0.01), log =TRUE) {
-  res <- dnorm(y, mean = x, sd = sigma, log = log)
-  
-  if(log) {
-    return(sum(res))
-  } else {
-    return(prod(res))
-  }
+dq.x.mis <- function(y, x, sigma = sqrt(10), log =TRUE) {
+  sum(dnorm(x, mean = y, sd = sigma, log = log))
 }
 
-rq.x.mis <- function(x, sigma = sqrt(1/0.01)) {
+rq.x.mis <- function(x, sigma = sqrt(10)) {
   rnorm(length(x), mean = x, sd = sigma)
 }
 
