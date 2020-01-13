@@ -6,6 +6,7 @@ library(ggpubr)
 load(file = "./missing/sims/missing-is-w-inla.Rdata")
 load(file = "./missing/sims/missing-amis-w-inla.Rdata")
 load(file = "./missing/sims/missing-mcmc-w-inla.Rdata")
+mcmc_w_inla_mod = mod
 
 width = 5
 height = 5
@@ -135,13 +136,23 @@ is_kern8 = multi_to_uni_kde(is_w_inla_mod$eta[,8],is_w_inla_mod$weight,binwidth=
 amis_kern9 = multi_to_uni_kde(amis_w_inla_mod$eta[,9],amis_w_inla_mod$weight,binwidth=15)
 is_kern9 = multi_to_uni_kde(is_w_inla_mod$eta[,9],is_w_inla_mod$weight,binwidth=15)
 
-
+amis_kerns = lapply(seq(ncol(amis_w_inla_mod$eta)), function(x){
+  as.data.frame(density(x = amis_w_inla_mod$eta[,x],
+                        weights = amis_w_inla_mod$weight/sum(amis_w_inla_mod$weight), kernel = "gaussian")[c(1,2)])
+})
+is_kerns = lapply(seq(ncol(is_w_inla_mod$eta)), function(x){
+  as.data.frame(density(x = is_w_inla_mod$eta[,x],
+                        weights = is_w_inla_mod$weight/sum(is_w_inla_mod$weight), kernel = "gaussian")[c(1,2)])
+})
+mcmc_kerns = lapply(seq(ncol(mcmc_w_inla_mod$eta)), function(x){
+  as.data.frame(density(x = mcmc_w_inla_mod$eta[,x],kernel = "gaussian")[c(1,2)])
+})
 
 obs.names = sprintf("Observation %d",df$idx.mis)
 p6 <-ggplot() + 
-  geom_line(data=amis_kern1, aes(x=x,y=y,color="AMIS with INLA")) +
-  geom_line(data=is_kern1, aes(x=x,y=y,color="IS with INLA")) + 
-  #geom_density(data=data.frame(x = mcmc_w_inla_mod$eta[,1]), aes(x=x,color="MCMC with INLA")) + 
+  geom_line(data=amis_kerns[[1]], aes(x=x,y=y,color="AMIS with INLA")) +
+  geom_line(data=is_kerns[[1]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data=mcmc_kerns[[1]], aes(x=x,y=y,color="MCMC with INLA")) + 
   labs(color = "",x="",y="",title=obs.names[1]) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))

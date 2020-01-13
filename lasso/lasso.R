@@ -28,7 +28,7 @@ df <- list(y = y, x = x)
 n.beta <- ncol(df$x)
 
 # ml estimates
-ml = summary(lm(y~x, data = df))$coefficients[2:6,1:2]
+ml = summary(lm(y~-1 + x, data = df))$coefficients[,1:2]
 
 #Indices for train/test model
 set.seed(1)
@@ -40,12 +40,12 @@ test <- (-train)
 grid <- 10^seq(10, -2, length = 100)
 
 #Fit lasso model for several values of lambda
-lasso.mod <- glmnet(x[train, ] , y[train], alpha = 1, lambda = grid)
+lasso.mod <- glmnet(x[train, ] , y[train], alpha = 1, lambda = grid,intercept = F)
 plot(lasso.mod)
 
 #CV
 set.seed(1)
-cv.out <- cv.glmnet(x[train, ], y[train], alpha = 1)
+cv.out <- cv.glmnet(x[train, ], y[train], alpha = 1,intercept=F)
 plot(cv.out)
 
 #Take best lambda for lasso model
@@ -56,7 +56,7 @@ lasso.pred <- predict(lasso.mod, s = bestlam, newx = x[test, ])
 mean((lasso.pred - y[test])^2)
 
 #Fit model to complete dataset
-out <- glmnet(x, y, alpha = 1, lambda = grid)
+out <- glmnet(x, y, alpha = 1, lambda = grid,intercept=F)
 lasso.coef <- predict(out, type = "coefficients", s = bestlam)
 
 #Check estimated coefficients
