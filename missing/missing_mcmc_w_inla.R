@@ -27,6 +27,15 @@ mcmc.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla,
   margs = NA
   for (i in seq(2,n.samples)){
     setTxtProgressBar(pb, i)
+    INLA_crash = T
+    while(INLA_crash){
+      tryCatch({
+        eta.new = r.prop(eta[i-1,])
+        mod.new = fit.inla(data, eta.new)
+        INLA_crash = F 
+      },error=function(e){
+      },finally={})
+    }
     eta.new = r.prop(eta[i-1,])
     mod.new = fit.inla(data, eta.new)
     lacc1 = mod.new$mlik + prior(eta.new) + d.prop(eta.new, eta[i-1,])
