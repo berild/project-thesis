@@ -22,57 +22,14 @@ ggsave(filename = "lasso_tau_plot.pdf", plot = p1, device = NULL, path = "./lass
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 
-
-multi_to_uni_kde <- function(eta,weight=NA,interval=NA,binwidth=50){
-  if (anyNA(weight)){
-    weight = 1
-  }else{
-    weight = weight/sum(weight)
-  }
-  if (anyNA(interval)){
-    xseq = seq(min(eta),max(eta),length.out = binwidth+1) 
-  }else{
-    xseq = seq(interval[1],interval[2],length.out = binwidth+1)
-  }
-  uni_kern = data.frame(x = xseq[-(binwidth+1)] + 1/2*(xseq[2]-xseq[1]),
-                        y = rep(0,binwidth))
-  int_kern = 0
-  for (j in seq(2,binwidth+1)){
-    uni_kern$y[j-1] = sum(weight[(xseq[j-1]<=eta)&(xseq[j]>eta)])
-    int_kern = int_kern + uni_kern$y[j-1]*(xseq[j]-xseq[j-1])
-  }
-  uni_kern$y = uni_kern$y/int_kern
-  uni_spline = smooth.spline(uni_kern)
-  uni_kern = as.data.frame(predict(uni_spline,x=seq(xseq[1],xseq[binwidth+1],length.out = 4*binwidth)))
-  return(uni_kern)
-}
-
-amis_kern1 = multi_to_uni_kde(amis_w_inla_mod$eta[,1],amis_w_inla_mod$weight,c(-0.5,0.5),binwidth=100)
-is_kern1 = multi_to_uni_kde(is_w_inla_mod$eta[,1],is_w_inla_mod$weight,c(-0.5,0.5),binwidth=15)
-amis_kern2 = multi_to_uni_kde(amis_w_inla_mod$eta[,2],amis_w_inla_mod$weight,c(-0.3,0.6),binwidth=15)
-is_kern2 = multi_to_uni_kde(is_w_inla_mod$eta[,2],is_w_inla_mod$weight,c(-0.5,0.5),binwidth=15)
-amis_kern3 = multi_to_uni_kde(amis_w_inla_mod$eta[,3],amis_w_inla_mod$weight,c(-0.3,0.4),binwidth=15)
-is_kern3 = multi_to_uni_kde(is_w_inla_mod$eta[,3],is_w_inla_mod$weight,c(-0.5,0.5),binwidth=15)
-amis_kern4 = multi_to_uni_kde(amis_w_inla_mod$eta[,4],amis_w_inla_mod$weight,c(-0.2,0.4),binwidth=15)
-is_kern4 = multi_to_uni_kde(is_w_inla_mod$eta[,4],is_w_inla_mod$weight,c(-0.5,0.5),binwidth=15)
-amis_kern5 = multi_to_uni_kde(amis_w_inla_mod$eta[,5],amis_w_inla_mod$weight,c(-0.2,0.6),binwidth=15)
-is_kern5 = multi_to_uni_kde(is_w_inla_mod$eta[,5],is_w_inla_mod$weight,c(-0.5,0.5),binwidth=15)
-
-a = density(x = is_w_inla_mod$eta[,1],
-            bw=0.05,
-            weights = is_w_inla_mod$weight/sum(is_w_inla_mod$weight),
-            from = -0.6, to = 0.6, kernel = "gaussian")
-ggplot(data.frame(x=a$x, y = a$y), aes(x=x,y=y)) + 
-  geom_line()
-
 amis_kerns = lapply(seq(ncol(amis_w_inla_mod$eta)), function(x){
   as.data.frame(density(x = amis_w_inla_mod$eta[,x],
-                        bw = 0.005,
                         weights = amis_w_inla_mod$weight/sum(amis_w_inla_mod$weight),
                         from = -0.6, to = 0.6, kernel = "gaussian")[c(1,2)])
 })
 is_kerns = lapply(seq(ncol(is_w_inla_mod$eta)), function(x){
   as.data.frame(density(x = is_w_inla_mod$eta[,x],
+                        bw = 0.08,
                         weights = is_w_inla_mod$weight/sum(is_w_inla_mod$weight),
                         from = -0.6, to = 0.6, kernel = "gaussian")[c(1,2)])
 })
@@ -84,9 +41,9 @@ mcmc_kerns = lapply(seq(ncol(mcmc_w_inla_mod$eta)), function(x){
 
 p2 <-ggplot() + 
   geom_line(data = amis_kerns[[1]], aes(x=x,y=y,color="AMIS with INLA")) +
-  #geom_line(data= is_kerns[[1]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data= is_kerns[[1]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[1]], aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title=expression(beta[1])) + 
+  labs(color = "",x="",y="",title="AtBat") + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p2
@@ -95,9 +52,9 @@ ggsave(filename = "lasso_b1_plot.pdf", plot = p2, device = NULL, path = "./lasso
 
 p3 <-ggplot() + 
   geom_line(data = amis_kerns[[2]], aes(x=x,y=y,color="AMIS with INLA")) +
-  #geom_line(data= is_kerns[[2]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data= is_kerns[[2]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[2]], aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title=expression(beta[2])) + 
+  labs(color = "",x="",y="",title="Hits") + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p3
@@ -106,9 +63,9 @@ ggsave(filename = "lasso_b2_plot.pdf", plot = p3, device = NULL, path = "./lasso
 
 p4 <-ggplot() + 
   geom_line(data = amis_kerns[[3]], aes(x=x,y=y,color="AMIS with INLA")) +
-  #geom_line(data= is_kerns[[3]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data= is_kerns[[3]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[3]], aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title=expression(beta[3])) + 
+  labs(color = "",x="",y="",title="HmRun") + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p4
@@ -117,9 +74,9 @@ ggsave(filename = "lasso_b3_plot.pdf", plot = p4, device = NULL, path = "./lasso
 
 p5 <-ggplot() + 
   geom_line(data = amis_kerns[[4]], aes(x=x,y=y,color="AMIS with INLA")) +
-  #geom_line(data= is_kerns[[4]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data= is_kerns[[4]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[4]], aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title=expression(beta[4])) + 
+  labs(color = "",x="",y="",title="Runs") + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p5
@@ -128,9 +85,9 @@ ggsave(filename = "lasso_b4_plot.pdf", plot = p5, device = NULL, path = "./lasso
 
 p6 <-ggplot() + 
   geom_line(data = amis_kerns[[5]], aes(x=x,y=y,color="AMIS with INLA")) +
-  #geom_line(data= is_kerns[[5]], aes(x=x,y=y,color="IS with INLA")) + 
+  geom_line(data= is_kerns[[5]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[5]], aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title=expression(beta[5])) + 
+  labs(color = "",x="",y="",title="RBI") + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p6
@@ -149,7 +106,7 @@ p7 <- ggplot() +
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x))) +
   annotation_logticks() + 
-  labs(color = "",x="Runtime (secs)",y="Effective sample size") + 
+  labs(color = "",x="Runtime (sec)",y="Effective sample size") + 
   coord_cartesian(xlim=c(min(amis_w_inla_mod$ess$time),max(mcmc_w_inla_mod$ess$time))) + 
   theme_bw() + 
   theme(legend.position="bottom")
@@ -157,7 +114,7 @@ p7
 ggsave(filename = "lasso_ess_plot.pdf", plot = p7, device = NULL, path = "./lasso/figures/",
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
-ptot <- ggarrange(p1, p7, p2, p3, p4, p5, p6, ncol=2, nrow=4, common.legend = TRUE, legend="bottom")
+ptot <- ggarrange(p2, p3, p4, p5, p6, p7, ncol=2, nrow=3, common.legend = TRUE, legend="bottom")
 ptot
 ggsave(filename = "lasso_tot.pdf", plot = ptot, device = NULL, path = "./lasso/figures/",
        scale = 1, width = 2*width, height = 3*height, units = "in", dpi=5000)

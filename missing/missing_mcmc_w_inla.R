@@ -1,24 +1,15 @@
 require(INLA)
 require(mvtnorm)
 
-dq.x.mis <- function(y, x, sigma = init$cov/4, log =TRUE){
-  dmvnorm(x, mean = y, sigma = sigma, log = log)
-  #dmvt(y,delta=x,sigma=sigma,df=1,log=log,type = "shifted")
+
+
+dq.x.mis <- function(y, x, sigma = sqrt(5), log =TRUE) {
+  sum(dnorm(x, mean = y, sd = sigma, log = log))
 }
 
-rq.x.mis <- function(x, sigma = init$cov/4){
-  as.vector(rmvnorm(1, mean = x, sigma = sigma))
-  #as.vector(rmvt(1,sigma = sigma, df=3, delta = x, type = "shifted"))
+rq.x.mis <- function(x, sigma = sqrt(5)) {
+  rnorm(length(x), mean = x, sd = sigma)
 }
-
-
-#dq.x.mis <- function(y, x, sigma = sqrt(10), log =TRUE) {
-#  sum(dnorm(x, mean = y, sd = sigma, log = log))
-#}
-
-#rq.x.mis <- function(x, sigma = sqrt(10)) {
-#  rnorm(length(x), mean = x, sd = sigma)
-#}
 
 mcmc.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla,
                         n.samples = 100, n.burnin = 5, n.thin = 1){
