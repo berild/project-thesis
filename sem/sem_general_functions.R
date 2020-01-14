@@ -10,8 +10,8 @@ prior.rho <- function(x, log = TRUE) {
   dunif(x, -1.5, 1, log = log)
 }
 
-fit.inla <- function(data, rho) {
-  res <- sem.inla(form, d = data, W = W, rho = rho,
+fit.inla <- function(data, eta) {
+  res <- sem.inla(form, d = data, W = W, rho = eta,
                   family = "gaussian", impacts = FALSE,
                   control.family = list(hyper = zero.variance),
                   verbose = FALSE)
