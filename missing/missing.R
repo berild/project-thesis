@@ -35,7 +35,7 @@ source("./missing/missing_general_function.R")
 source("./missing/missing_mcmc_w_inla.R")
 mcmc_w_inla_mod <- mcmc.w.inla(data = df, init = init$mu,
                                prior.x.mis, dq.x.mis, rq.x.mis, fit.inla,
-                               n.samples = 10500, n.burnin = 500, n.thin = 1)
+                               n.samples = 100500, n.burnin = 500, n.thin = 10)
 save(mcmc_w_inla_mod, file = "./missing/sims/missing-mcmc-w-inla.Rdata")
 
 

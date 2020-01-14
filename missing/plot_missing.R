@@ -6,12 +6,7 @@ library(ggpubr)
 load(file = "./missing/sims/missing-is-w-inla.Rdata")
 load(file = "./missing/sims/missing-amis-w-inla.Rdata")
 load(file = "./missing/sims/missing-mcmc-w-inla.Rdata")
-mcmc_w_inla_mod = list(
-  eta = mcmc_w_inla_mod$eta,
-  margs = mcmc_w_inla_mod$dists,
-  mlik = mcmc_w_inla_mod$mlik,
-  acc.vec = mcmc_w_inla_mod$acc.vec
-)
+
 
 width = 5
 height = 5
@@ -63,7 +58,7 @@ ggsave(filename = "missing_beta3.pdf", plot = p4, device = NULL, path = "./missi
 p5 <- ggplot() + 
   geom_line(data = amis_w_inla_mod$margs$tau, aes(x=x,y=y,color="AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$margs$tau, aes(x=x,y=y,color="IS with INLA")) +
-  #geom_line(data = mcmc_w_inla_mod$margs$beta0, aes(x=x,y=y,color="MCMC with INLA")) +
+  geom_line(data = mcmc_w_inla_mod$margs$beta0, aes(x=x,y=y,color="MCMC with INLA")) +
   labs(color = "",x="",y="",title=expression(tau)) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
@@ -80,7 +75,7 @@ p15 <- ggplot() +
   #geom_hline(yintercept = 10000) + 
   geom_line(data = is_w_inla_mod$ess, aes(x = time, y = ess, color = "IS with INLA"))+
   geom_line(data = amis_w_inla_mod$ess, aes(x = time, y = ess, color = "AMIS with INLA")) + 
-  #geom_line(data = mcmc_w_inla_mod$ess, aes(x = time, y = ess, color = "MCMC with INLA")) + 
+  geom_line(data = mcmc_w_inla_mod$ess, aes(x = time, y = ess, color = "MCMC with INLA")) + 
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x))) +
   annotation_logticks() + 
