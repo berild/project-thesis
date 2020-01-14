@@ -1,5 +1,10 @@
 require(INLA)
 require(INLABMA)
+require(coda)
+require(spdep)
+require(spatialreg)
+require(mvtnorm)
+require(MASS)
 
 prior.rho <- function(x, log = TRUE) {
   dunif(x, -1.5, 1, log = log)
@@ -18,14 +23,14 @@ fit.inla <- function(data, rho) {
                            tau = res$marginals.hyperpar[[1]])))
 }
 
-
 calc.theta <- function(theta,weight,eta,i_tot,i_cur){
   for (i in seq(ncol(eta))){
     theta$a.mu[i_cur,i] = sum(eta[1:i_tot,i]*weight[1:i_tot])/sum(weight[1:i_tot])
   }
   for (i in seq(ncol(eta))){
     for (j in seq(i,ncol(eta))){
-      theta$a.cov[i,j,i_cur] = theta$a.cov[j,i,i_cur] = sum(weight[1:i_tot]*(eta[1:i_tot,i]-theta$a.mu[i_cur,i])*(eta[1:i_tot,j]-theta$a.mu[i_cur,j]))/(sum(weight[1:i_tot]))
+      theta$a.cov[i,j,i_cur] = theta$a.cov[j,i,i_cur] = sum(weight[1:i_tot]*(eta[1:i_tot,i]-theta$a.mu[i_cur,i])*
+                                                              (eta[1:i_tot,j]-theta$a.mu[i_cur,j]))/(sum(weight[1:i_tot]))
     }
   }
   return(theta)
@@ -39,30 +44,6 @@ calc.stats <- function(stats,weight){
     stats[[i]] = new.stat
   }
   return(stats)
-}
-
-calc.delta <- function(N_t,eta,theta,t,d.prop){
-  tmp = 0
-  for (l in seq(t)){
-    tmp = tmp + N_t[l]*d.prop(x = eta, theta = theta, i_cur = l+1, log = FALSE)
-  }
-  return(tmp)
-}
-
-update.delta.weight <- function(delta,weight,N_t,eta,theta,t,mlik,prior,d.prop){
-  i_tmp = 0
-  N_tmp = sum(N_t[1:(t+1)])
-  for (l in seq(t)){
-    for (i in seq(N_t[l])){
-      i_tmp = i_tmp + 1
-      delta[i_tmp] = delta[i_tmp] + N_t[l]*d.prop(x = eta[i_tmp], theta = theta, i_cur = t+1, log = FALSE)
-      weight[i_tmp] = exp(mlik[i_tmp] + prior(eta[i_tmp]))/(delta[i_tmp]/N_tmp)
-    }
-  }
-  return(list(
-    delta = delta,
-    weight = weight
-  ))
 }
 
 store.stats <- function(stat,stats,j,n.prop){
@@ -98,6 +79,25 @@ store.post <- function(marg,margs,j,n.prop){
     }
     return(margs)
   }
+}
+
+running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
+  if (anyNA(ws)){
+    require(coda)
+    ess = unlist(lapply(sapply(seq(nrow(eta)),function(x){
+      effectiveSize(eta[1:x,])
+    }),min))
+  }else{
+    if (norm){
+      ws = ws/sum(ws)
+    }
+    ess = unlist(sapply(seq(length(ws)),function(x){
+      sum(ws[1:x])^2/(sum(ws[1:x]^2))
+    }))
+  }
+  ess.df = data.frame(time = times[seq(1,length(times),step)],
+                      ess = ess[seq(1,length(times),step)])
+  return(ess.df)
 }
 
 fit.marginals <- function(ws,margs,len = 400){

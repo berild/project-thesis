@@ -2,101 +2,38 @@ library(INLA)
 library(spdep)
 library(spatialreg)
 library(INLABMA)
+library(parallel)
+library(mvtnorm)
+library(MASS)
+library(coda)
 
 data(columbus)
+
 lw <- nb2listw(col.gal.nb, style="W")
-colsemml <- errorsarlm(CRIME ~ INC + HOVAL, data=columbus, lw, method="eigen", quiet=TRUE)
+colsemml <- errorsarlm(CRIME ~ INC + HOVAL, data=columbus, lw, method="eigen", 
+                       quiet=TRUE)
 W <- as(as_dgRMatrix_listw(nb2listw(col.gal.nb)), "CsparseMatrix")
 columbus$idx<-1:nrow(columbus)
 form<- CRIME ~ INC + HOVAL
 zero.variance = list(prec=list(initial = 25, fixed=TRUE))
 df = columbus
+init = list(mu = 0, cov = 2)
 
-dq.rho <- function(x, y, sigma = .15, log =TRUE) {
-  dnorm(y, mean = x, sd = sigma, log = log)
-}
+source("./sem/sem_general_function.R")
 
-rq.rho <- function(x, sigma = .15) {
-  rnorm(1, mean = x, sd = sigma)
-}
+source("./sem/sem_amis_w_inla.R")
+amis_w_inla_mod <- amis.w.inla(data = df, init = init, prior.rho, 
+                               dq.rho, rq.rho, fit.inla, 
+                               N_t = seq(25,50,1)*10, N_0 = 250)
+save(amis_w_inla_mod, file = "./sem/sims/sem-amis-w-inla.Rdata")
 
+source("./sem/sem_is_w_inla.R")
+is_w_inla_mod <- is.w.inla(data = df, init = init, prior.rho, 
+                           dq.rho, rq.rho,fit.inla, N_0 = 800, N = 10000)
+save(is_w_inla_mod, file = "./sem/sims/sem-is-w-inla.Rdata")
 
-
-dist.init <- function(x,n.step = 100){
-  lx = min(x)
-  ux = max(x)
-  step = (ux - lx)/(n.step-1)
-  seq(from = lx - step, to = ux + step, by = (ux - lx)/(n.step-1))
-}
-
-
-moving.marginals <- function(marg, post.marg, n){
-  for (i in seq(length(post.marg))){
-    tmp.post.marg = post.marg[[i]]
-    tmp.marg = marg[[i]]
-    step = tmp.post.marg[2,1] - tmp.post.marg[1,1]
-    new.x = tmp.post.marg[,1]
-    new.y = tmp.post.marg[,2]
-    if (max(tmp.marg[,1])>max(new.x)){
-      new.u = seq(from = max(new.x) + step,
-                  to = max(tmp.marg[,1])+ step,
-                  by = step)
-      new.x = c(new.x, new.u)
-      new.y = c(new.y,rep(0,length(new.u)))
-    }
-    if (min(tmp.marg[,1])<min(new.x)){
-      new.l = seq(from = min(new.x) - step,
-                  to = min(tmp.marg[,1]) - step,
-                  by = - step)
-      new.x = c(rev(new.l), new.x)
-      new.y = c(rep(0,length(new.l)),new.y)
-    }
-    tmp.post.marg = data.frame(x = new.x, y = new.y)
-    tmp = inla.dmarginal(tmp.post.marg[,1], tmp.marg, log = FALSE)
-    tmp.post.marg[,2] = (tmp + (n-1)*tmp.post.marg[,2])/n
-    post.marg[[i]] = tmp.post.marg
-  }
-  post.marg
-}
-
-sem.mcmc.w.inla <- function(data, n.samples = 100, n.burnin = 5, n.thin = 1){
-  rho = numeric(n.samples)
-  mlik = numeric(n.samples)
-  acc.vec = numeric(n.samples)
-  mod.curr = fit.inla(data, rho[1])
-  mlik[1] = mod.curr$mlik
-  pb <- txtProgressBar(min = 0, max = n.samples, style = 3)
-  for (i in seq(2,n.samples)){
-    setTxtProgressBar(pb, i)
-    rho.new = rq.rho(rho[i-1])
-    mod.new = fit.inla(data,rho.new)
-    lacc1 = mod.new$mlik + prior.rho(rho.new) + dq.rho(rho.new, rho[i-1])
-    lacc2 = mod.curr$mlik + prior.rho(rho[i-1]) + dq.rho(rho[i-1], rho.new)
-    acc = acc = min(1,exp(lacc1 - lacc2))
-    if (runif(1)<acc){
-      rho[i] = rho.new
-      mod.curr = mod.new
-      mlik[i] = mod.new$mlik
-      acc.vec[i] = T
-    }else{ 
-      rho[i] = rho[i-1]
-      mlik[i] = mlik[i-1]
-      acc.vec[i] = F
-    }
-    if(i == n.burnin){
-      post.marg = mod.curr$dists
-    }else if(i > n.burnin){
-      post.marg = moving.marginals(mod.curr$dists,
-                                   post.marg,
-                                   i-n.burnin+1)
-    }
-  }
-  return(list(rho=rho,
-              post.marg = post.marg,
-              acc.vec = acc.vec,
-              mlik = mlik))
-}
-
-mod <- sem.mcmc.w.inla(columbus,n.samples = 100000, n.burnin = 500)
-save(mod, file = "./sem/sem-mcmc-w-inla.Rdata")
-
+source("./sem/sem_mcmc_w_inla.R")
+mcmc_w_inla_mod <- mcmc.w.inla(data = df, init = init$mu,
+                               prior.rho, dq.rho, rq.rho, fit.inla,
+                               n.samples = 100500, n.burnin = 500, n.thin = 10)
+save(mcmc_w_inla_mod, file = "./sem/sims/sem-mcmc-w-inla.Rdata")
