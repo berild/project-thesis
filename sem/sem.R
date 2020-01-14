@@ -19,7 +19,7 @@ zero.variance = list(prec=list(initial = 25, fixed=TRUE))
 df = columbus
 init = list(mu = 0, cov = 2)
 
-source("./sem/sem_general_function.R")
+source("./sem/sem_general_functions.R")
 
 source("./sem/sem_amis_w_inla.R")
 amis_w_inla_mod <- amis.w.inla(data = df, init = init, prior.rho, 
