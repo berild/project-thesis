@@ -10,7 +10,7 @@ rq.beta <- function(x=c(0,0), sigma = diag(5,2,2)) {
 
 dq.beta <- function(y, x, sigma = diag(5,2,2), log =TRUE) {
   dmvnorm(y,mean = x, sigma = sigma,log = log)
-  #dmvt(y,delta=x,sigma=sigma,df=1,log=log,type = "shifted")
+  #dmvt(y,delta=x,sigma=sigma,df=3,log=log,type = "shifted")
 }
 
 calc.delta <- function(N_t,eta,theta,t,d.prop){
