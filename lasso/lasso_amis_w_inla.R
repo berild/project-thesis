@@ -4,7 +4,7 @@ require(parallel)
 
 dq.beta <- function(x, y, sigma = stdev.samp, log =TRUE) {
   #dmvnorm(y, mean = x, sigma = sigma, log = log)
-  dmvt(y,delta=x,sigma=sigma,df=1,log=log,type = "shifted")
+  dmvt(y,delta=x,sigma=sigma,df=3,log=log,type = "shifted")
 }
 
 rq.beta <- function(x, sigma = stdev.samp) {
