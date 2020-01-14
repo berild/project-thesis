@@ -26,6 +26,7 @@ calc.delta <- function(N_t,eta,theta,t,d.prop){
 update.delta.weight <- function(delta,weight,N_t,eta,theta,t,mlik,prior,d.prop){
   i_tmp = 0
   N_tmp = sum(N_t[1:(t+1)])
+  eta = matrix(eta)
   for (l in seq(t)){
     for (i in seq(N_t[l])){
       i_tmp = i_tmp + 1
@@ -61,7 +62,7 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
   if (detectCores()>10){
     ncores = 10
   }else{
-    ncores = 1
+    ncores = detectCores()
   }
   N_tot = N_0 + sum(N_t)
   mlik = numeric(N_tot)
