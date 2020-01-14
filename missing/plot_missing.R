@@ -58,7 +58,7 @@ ggsave(filename = "missing_beta3.pdf", plot = p4, device = NULL, path = "./missi
 p5 <- ggplot() + 
   geom_line(data = amis_w_inla_mod$margs$tau, aes(x=x,y=y,color="AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$margs$tau, aes(x=x,y=y,color="IS with INLA")) +
-  geom_line(data = mcmc_w_inla_mod$margs$beta0, aes(x=x,y=y,color="MCMC with INLA")) +
+  geom_line(data = mcmc_w_inla_mod$margs$tau, aes(x=x,y=y,color="MCMC with INLA")) +
   labs(color = "",x="",y="",title=expression(tau)) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))

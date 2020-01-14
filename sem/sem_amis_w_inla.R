@@ -74,6 +74,7 @@ amis.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla, N_t = rep(2
                a.cov = array(NA, dim = c(length(init$mu), length(init$mu), length(N_t) +2)))
   theta$a.mu[1,] = init$mu
   theta$a.cov[,,1] = init$cov
+  browser()
   # initialization process 
   i_tot = 0
   pb <- txtProgressBar(min = 0, max = N_tot, style = 3)
