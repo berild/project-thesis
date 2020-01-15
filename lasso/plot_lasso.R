@@ -2,6 +2,35 @@ library(ggplot2)
 library(scales)
 library(ggpubr)
 
+library(ISLR)
+library(glmnet)
+library(coda)
+
+data(Hitters)
+Hitters <- na.omit(Hitters)
+#Create variables for lasso
+x <- model.matrix(Salary ~ ., Hitters)[, -1]
+x <- x[, 1:5] #Just for testing
+x <- scale(x)
+y <- Hitters$Salary
+y <- scale(y)
+df <- list(y = y, x = x)
+
+#Indices for train/test model
+set.seed(1)
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+
+
+#Grid for lambda parameter in lasso
+grid <- 10^seq(10, -2, length = 100)
+
+#Fit model to complete dataset
+out <- glmnet(x, y, alpha = 1, lambda = grid,intercept=F)
+lasso.coef <- predict(out, type = "coefficients", s = 0.073,intercept = F)
+lasso.coef
+
+
 ## loading simulation results
 load(file = "./lasso/sims/lasso-is-w-inla.Rdata")
 load(file = "./lasso/sims/lasso-amis-w-inla.Rdata")
@@ -40,6 +69,7 @@ mcmc_kerns = lapply(seq(ncol(mcmc_w_inla_mod$eta)), function(x){
 
 
 p2 <-ggplot() + 
+  geom_vline(xintercept = lasso.coef[2],linetype = "dashed") + 
   geom_line(data = amis_kerns[[1]], aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data= is_kerns[[1]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[1]], aes(x=x,y=y,color="MCMC with INLA")) + 
@@ -51,6 +81,7 @@ ggsave(filename = "lasso_b1_plot.pdf", plot = p2, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p3 <-ggplot() + 
+  geom_vline(xintercept = lasso.coef[3],linetype = "dashed") + 
   geom_line(data = amis_kerns[[2]], aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data= is_kerns[[2]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[2]], aes(x=x,y=y,color="MCMC with INLA")) + 
@@ -62,6 +93,7 @@ ggsave(filename = "lasso_b2_plot.pdf", plot = p3, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p4 <-ggplot() + 
+  geom_vline(xintercept = lasso.coef[4],linetype = "dashed") + 
   geom_line(data = amis_kerns[[3]], aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data= is_kerns[[3]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[3]], aes(x=x,y=y,color="MCMC with INLA")) + 
@@ -73,6 +105,7 @@ ggsave(filename = "lasso_b3_plot.pdf", plot = p4, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p5 <-ggplot() + 
+  geom_vline(xintercept = lasso.coef[5],linetype = "dashed") + 
   geom_line(data = amis_kerns[[4]], aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data= is_kerns[[4]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[4]], aes(x=x,y=y,color="MCMC with INLA")) + 
@@ -84,6 +117,7 @@ ggsave(filename = "lasso_b4_plot.pdf", plot = p5, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p6 <-ggplot() + 
+  geom_vline(xintercept = lasso.coef[6],linetype = "dashed") + 
   geom_line(data = amis_kerns[[5]], aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data= is_kerns[[5]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[5]], aes(x=x,y=y,color="MCMC with INLA")) + 
@@ -96,7 +130,6 @@ ggsave(filename = "lasso_b5_plot.pdf", plot = p6, device = NULL, path = "./lasso
 
 amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight/sum(amis_w_inla_mod$weight))
 is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight/sum(is_w_inla_mod$weight))
-mcmc_w_inla_mod$ess = running.ESS(mcmc_w_inla_mod$eta,mcmc_w_inla_mod$times)
 
 p7 <- ggplot() + 
   #geom_hline(yintercept = 10000) + 
@@ -117,4 +150,4 @@ ggsave(filename = "lasso_ess_plot.pdf", plot = p7, device = NULL, path = "./lass
 ptot <- ggarrange(p2, p3, p4, p5, p6, p7, ncol=2, nrow=3, common.legend = TRUE, legend="bottom")
 ptot
 ggsave(filename = "lasso_tot.pdf", plot = ptot, device = NULL, path = "./lasso/figures/",
-       scale = 1, width = 2*width, height = 3*height, units = "in", dpi=5000)
+       scale = 1, width = 2*width, height = 2*height, units = "in", dpi=5000)
