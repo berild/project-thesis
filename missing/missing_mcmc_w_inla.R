@@ -36,8 +36,6 @@ mcmc.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla,
       },error=function(e){
       },finally={})
     }
-    eta.new = r.prop(eta[i-1,])
-    mod.new = fit.inla(data, eta.new)
     lacc1 = mod.new$mlik + prior(eta.new) + d.prop(eta.new, eta[i-1,])
     lacc2 = mod.curr$mlik + prior(eta[i-1,]) + d.prop(eta[i-1,], eta.new)
     acc = min(1,exp(lacc1 - lacc2))
