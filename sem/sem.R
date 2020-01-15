@@ -27,10 +27,10 @@ amis_w_inla_mod <- amis.w.inla(data = df, init = init, prior.rho,
                                N_t = seq(25,50,1)*10, N_0 = 250)
 save(amis_w_inla_mod, file = "./sem/sims/sem-amis-w-inla.Rdata")
 
-source("./sem/sem_is_w_inla.R")
-is_w_inla_mod <- is.w.inla(data = df, init = init, prior.rho, 
-                           dq.rho, rq.rho,fit.inla, N_0 = 800, N = 10000)
-save(is_w_inla_mod, file = "./sem/sims/sem-is-w-inla.Rdata")
+#source("./sem/sem_is_w_inla.R")
+#is_w_inla_mod <- is.w.inla(data = df, init = init, prior.rho, 
+#                           dq.rho, rq.rho,fit.inla, N_0 = 800, N = 10000)
+#save(is_w_inla_mod, file = "./sem/sims/sem-is-w-inla.Rdata")
 
 source("./sem/sem_mcmc_w_inla.R")
 mcmc_w_inla_mod <- mcmc.w.inla(data = df, init = init$mu,

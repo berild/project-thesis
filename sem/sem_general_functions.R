@@ -24,42 +24,10 @@ fit.inla <- function(data, eta) {
 }
 
 calc.theta <- function(theta,weight,eta,i_tot,i_cur){
-  for (i in seq(ncol(eta))){
-    theta$a.mu[i_cur,i] = sum(eta[1:i_tot,i]*weight[1:i_tot])/sum(weight[1:i_tot])
-  }
-  for (i in seq(ncol(eta))){
-    for (j in seq(i,ncol(eta))){
-      theta$a.cov[i,j,i_cur] = theta$a.cov[j,i,i_cur] = sum(weight[1:i_tot]*(eta[1:i_tot,i]-theta$a.mu[i_cur,i])*
-                                                              (eta[1:i_tot,j]-theta$a.mu[i_cur,j]))/(sum(weight[1:i_tot]))
-    }
-  }
+    theta$a.mu[i_cur] = sum(eta[1:i_tot]*weight[1:i_tot])/sum(weight[1:i_tot])
+    theta$a.cov[i_cur] = sum(weight[1:i_tot]*(eta[1:i_tot]-theta$a.mu[i_cur])*
+                               (eta[1:i_tot]-theta$a.mu[i_cur]))/(sum(weight[1:i_tot]))
   return(theta)
-}
-
-calc.stats <- function(stats,weight){
-  for (i in seq(length(stats))){
-    new.stat = c(0,0)
-    new.stat[1] =  sum(stats[[i]]*weight)/sum(weight)
-    new.stat[2] = sum((stats[[i]] - new.stat[1])*(stats[[i]] - new.stat[1])*weight)/sum(weight)
-    stats[[i]] = new.stat
-  }
-  return(stats)
-}
-
-store.stats <- function(stat,stats,j,n.prop){
-  if (anyNA(stats)){
-    stats = stat
-    for (i in seq(length(stat))){
-      stats[[i]] = rep(NA, n.prop)
-      stats[[i]][j] = stat[[i]]
-    }
-    return(stats)
-  }else{
-    for (i in seq(length(stat))){
-      stats[[i]][j] = stat[[i]]
-    }
-    return(stats)
-  }
 }
 
 store.post <- function(marg,margs,j,n.prop){
@@ -85,7 +53,7 @@ running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
   if (anyNA(ws)){
     require(coda)
     ess = unlist(lapply(sapply(seq(nrow(eta)),function(x){
-      effectiveSize(eta[1:x,])
+      effectiveSize(eta[1:x])
     }),min))
   }else{
     if (norm){
@@ -94,6 +62,9 @@ running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
     ess = unlist(sapply(seq(length(ws)),function(x){
       sum(ws[1:x])^2/(sum(ws[1:x]^2))
     }))
+    rm.ess = !is.na(ess)
+    times = times[rm.ess]
+    ess = ess[rm.ess]
   }
   ess.df = data.frame(time = times[seq(1,length(times),step)],
                       ess = ess[seq(1,length(times),step)])
