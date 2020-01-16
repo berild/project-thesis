@@ -7,8 +7,8 @@ load(file = "./linreg/sims/linreg-inla.Rdata")
 load(file = "./linreg/sims/linreg-is-w-inla.Rdata")
 load(file = "./linreg/sims/linreg-amis-w-inla.Rdata")
 load(file = "./linreg/sims/linreg-mcmc-w-inla.Rdata")
-width = 5
-height = 5
+width = 7
+height = 7
 
 ## Plotting univariate distribution of the intercept; alpha
 
@@ -54,7 +54,6 @@ ggsave(filename = "linreg_contour_plot.pdf", plot = p3, device = NULL, path = ".
 
 amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight)
 is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight)
-mcmc_w_inla_mod$ess = running.ESS(mcmc_w_inla_mod$eta,mcmc_w_inla_mod$times)
 
 p4 <- ggplot() + 
   geom_hline(yintercept = 10000) + 
@@ -119,4 +118,4 @@ ggsave(filename = "linreg_beta2_plot.pdf", plot = p6, device = NULL, path = "./l
 ptot <- ggarrange(p3, p4, p5, p6, p2, p1, ncol=2, nrow=3, common.legend = TRUE, legend="bottom")
 ptot
 ggsave(filename = "linreg_tot.pdf", plot = ptot, device = NULL, path = "./linreg/figures/",
-       scale = 1, width = 2*width, height = 2*height, units = "in", dpi=5000)
+       scale = 1, width = width, height = height, units = "in", dpi=5000)

@@ -36,8 +36,8 @@ load(file = "./lasso/sims/lasso-is-w-inla.Rdata")
 load(file = "./lasso/sims/lasso-amis-w-inla.Rdata")
 load(file = "./lasso/sims/lasso-mcmc-w-inla.Rdata")
 
-width = 5
-height = 5
+width = 7
+height = 7
 
 p1 <- ggplot() + 
   geom_line(data = amis_w_inla_mod$margs$tau, aes(x = x, y = y, color = "AMIS with INLA")) + 
@@ -150,4 +150,4 @@ ggsave(filename = "lasso_ess_plot.pdf", plot = p7, device = NULL, path = "./lass
 ptot <- ggarrange(p2, p3, p4, p5, p6, p7, ncol=2, nrow=3, common.legend = TRUE, legend="bottom")
 ptot
 ggsave(filename = "lasso_tot.pdf", plot = ptot, device = NULL, path = "./lasso/figures/",
-       scale = 1, width = 2*width, height = 2*height, units = "in", dpi=5000)
+       scale = 1, width = width, height = height, units = "in", dpi=5000)

@@ -7,9 +7,22 @@ load(file = "./missing/sims/missing-is-w-inla.Rdata")
 load(file = "./missing/sims/missing-amis-w-inla.Rdata")
 load(file = "./missing/sims/missing-mcmc-w-inla.Rdata")
 
+marginal.stat <- function(method){
+  require(INLA)
+  stats = lapply(method, function(y){
+    m1 = inla.emarginal(function(x) x,y)
+    m2 = inla.emarginal(function(x) x^2,y)
+    c(m1,sqrt(m2-m1^2))
+  })
+  return(stats)
+}
 
-width = 5
-height = 5
+amis_w_inla_mod$stats = marginal.stat(amis_w_inla_mod$margs)
+is_w_inla_mod$stats = marginal.stat(is_w_inla_mod$margs)
+mcmc_w_inla_mod$stats = marginal.stat(mcmc_w_inla_mod$margs)
+
+width = 7
+height = 7
 
 p1 <- ggplot() + 
   geom_line(data = amis_w_inla_mod$margs$beta0, aes(x=x,y=y,color="AMIS with INLA")) + 
@@ -61,15 +74,18 @@ p5 <- ggplot() +
   geom_line(data = mcmc_w_inla_mod$margs$tau, aes(x=x,y=y,color="MCMC with INLA")) +
   labs(color = "",x="",y="",title=expression(tau)) + 
   theme_bw() + 
-  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
+  theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
+  coord_cartesian(xlim=c(0,0.025))
 p5
 ggsave(filename = "missing_tau.pdf", plot = p5, device = NULL, path = "./missing/figures/",
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 
-amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight/sum(amis_w_inla_mod$weight))
-is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight/sum(is_w_inla_mod$weight))
+amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight)
+is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight)
 mcmc_w_inla_mod$ess = running.ESS(mcmc_w_inla_mod$eta,mcmc_w_inla_mod$times)
+
+save(mcmc_w_inla_mod, file = "./missing/sims/missing-mcmc-w-inla.Rdata")
 
 p15 <- ggplot() + 
   #geom_hline(yintercept = 10000) + 
@@ -90,7 +106,7 @@ ggsave(filename = "missing_ess_plot.pdf", plot = p15, device = NULL, path = "./m
 ptot1 <- ggarrange(p1, p2, p3, p4, p5, p15, ncol=2, nrow=3, common.legend = TRUE, legend="bottom")
 ptot1
 ggsave(filename = "missing_tot1.pdf", plot = ptot1, device = NULL, path = "./missing/figures/",
-       scale = 1, width = 2*width, height = 3*height, units = "in", dpi=5000)
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 amis_kerns = lapply(seq(ncol(amis_w_inla_mod$eta)), function(x){
   as.data.frame(density(x = amis_w_inla_mod$eta[,x],
@@ -209,4 +225,4 @@ ggsave(filename = "missing_obs9.pdf", plot = p14, device = NULL, path = "./missi
 ptot2 <- ggarrange(p6, p7, p8, p9, p10, p11, p12, p13, p14, ncol=3, nrow=3, common.legend = TRUE, legend="bottom")
 ptot2
 ggsave(filename = "missing_tot2.pdf", plot = ptot2, device = NULL, path = "./missing/figures/",
-       scale = 1, width = 3*width, height = 3*height, units = "in", dpi=5000)
+       scale = 1, width = width, height = height, units = "in", dpi=5000)
