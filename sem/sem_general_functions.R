@@ -52,9 +52,9 @@ store.post <- function(marg,margs,j,n.prop){
 running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
   if (anyNA(ws)){
     require(coda)
-    ess = unlist(lapply(sapply(seq(nrow(eta)),function(x){
+    ess = sapply(seq(2,length(eta)),function(x){
       effectiveSize(eta[1:x])
-    }),min))
+    })
   }else{
     if (norm){
       ws = ws/sum(ws)
@@ -66,8 +66,8 @@ running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
     times = times[rm.ess]
     ess = ess[rm.ess]
   }
-  ess.df = data.frame(time = times[seq(1,length(times),step)],
-                      ess = ess[seq(1,length(times),step)])
+  ess.df = data.frame(time = c(times[1],rev(times[seq(length(times),1,-step)])),
+                      ess = c(ess[1],rev(ess[seq(length(ess),1,-step)])))
   return(ess.df)
 }
 
