@@ -21,11 +21,11 @@ init = list(mu = 0, cov = 2)
 
 source("./sem/sem_general_functions.R")
 
-source("./sem/sem_amis_w_inla.R")
-amis_w_inla_mod <- amis.w.inla(data = df, init = init, prior.rho, 
-                               dq.rho, rq.rho, fit.inla, 
-                               N_t = seq(25,50,1)*10, N_0 = 250)
-save(amis_w_inla_mod, file = "./sem/sims/sem-amis-w-inla.Rdata")
+#source("./sem/sem_amis_w_inla.R")
+#amis_w_inla_mod <- amis.w.inla(data = df, init = init, prior.rho, 
+#                               dq.rho, rq.rho, fit.inla, 
+#                               N_t = seq(25,50,1)*10, N_0 = 250)
+#save(amis_w_inla_mod, file = "./sem/sims/sem-amis-w-inla.Rdata")
 
 #source("./sem/sem_is_w_inla.R")
 #is_w_inla_mod <- is.w.inla(data = df, init = init, prior.rho, 

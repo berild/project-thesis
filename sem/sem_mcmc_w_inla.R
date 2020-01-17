@@ -52,7 +52,7 @@ mcmc.w.inla <- function(data, init, prior, d.prop, r.prop, fit.inla,
     }
   }
   eta = eta[-seq(n.burnin)]
-  eta = eta[seq(from = 1, to = length(eta), by=n.thin),]
+  eta = eta[seq(from = 1, to = length(eta), by=n.thin)]
   return(list(eta = eta,
               margs = lapply(margs, function(x){fit.marginals(rep(1,N_marg),x)}),
               acc.vec = acc.vec,
