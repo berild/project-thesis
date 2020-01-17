@@ -99,8 +99,9 @@ running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
       sum(ws[1:x])^2/(sum(ws[1:x]^2))
     }))
   }
-  ess.df = data.frame(time = times[seq(1,length(times),step)],
-                      ess = ess[seq(1,length(times),step)])
+  browser()
+  ess.df = data.frame(time = c(times[1],times[seq(step,length(times),step)]),
+                      ess = c(ess[1],ess[seq(step,length(times),step)]))
   return(ess.df)
 }
 
