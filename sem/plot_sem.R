@@ -28,7 +28,7 @@ height = 7
 p1 <- ggplot() + 
   geom_line(data = amis_w_inla_mod$margs$intercept, aes(x=x,y=y,color="AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$margs$intercept, aes(x=x,y=y,color="IS with INLA")) +
-  #geom_line(data = mcmc_w_inla_mod$margs$intercept, aes(x=x,y=y,color="MCMC with INLA")) +
+  geom_line(data = mcmc_w_inla_mod$margs$intercept, aes(x=x,y=y,color="MCMC with INLA")) +
   labs(color = "",x="",y="",title="Intercept") + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
@@ -40,7 +40,7 @@ ggsave(filename = "sem_intercept.pdf", plot = p1, device = NULL, path = "./sem/f
 p2 <- ggplot() + 
   geom_line(data = amis_w_inla_mod$margs$INC, aes(x=x,y=y,color="AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$margs$INC, aes(x=x,y=y,color="IS with INLA")) +
-  #geom_line(data = mcmc_w_inla_mod$margs$INC, aes(x=x,y=y,color="MCMC with INLA")) +
+  geom_line(data = mcmc_w_inla_mod$margs$INC, aes(x=x,y=y,color="MCMC with INLA")) +
   labs(color = "",x="",y="",title="INC") + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
@@ -52,7 +52,7 @@ ggsave(filename = "sem_INC.pdf", plot = p2, device = NULL, path = "./sem/figures
 p3 <- ggplot() + 
   geom_line(data = amis_w_inla_mod$margs$HOVAL, aes(x=x,y=y,color="AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$margs$HOVAL, aes(x=x,y=y,color="IS with INLA")) +
-  #geom_line(data = mcmc_w_inla_mod$margs$HOVAL, aes(x=x,y=y,color="MCMC with INLA")) +
+  geom_line(data = mcmc_w_inla_mod$margs$HOVAL, aes(x=x,y=y,color="MCMC with INLA")) +
   labs(color = "",x="",y="",title="HOVAL") + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
@@ -64,7 +64,7 @@ ggsave(filename = "sem_HOVAL.pdf", plot = p3, device = NULL, path = "./sem/figur
 p4 <- ggplot() + 
   geom_line(data = amis_w_inla_mod$margs$tau, aes(x=x,y=y,color="AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$margs$tau, aes(x=x,y=y,color="IS with INLA")) +
-  #geom_line(data = mcmc_w_inla_mod$margs$tau, aes(x=x,y=y,color="MCMC with INLA")) +
+  geom_line(data = mcmc_w_inla_mod$margs$tau, aes(x=x,y=y,color="MCMC with INLA")) +
   labs(color = "",x="",y="",title=expression(tau)) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
@@ -81,15 +81,13 @@ is_kern = as.data.frame(density(x = is_w_inla_mod$eta,
                         weights = is_w_inla_mod$weight/sum(is_w_inla_mod$weight), 
                         kernel = "gaussian")[c(1,2)])
 
-mcmc_kerns = lapply(seq(ncol(mcmc_w_inla_mod$eta)), function(x){
-  as.data.frame(density(x = mcmc_w_inla_mod$eta[,x],
-                        kernel = "gaussian")[c(1,2)])
-})
+mcmc_kern = as.data.frame(density(x = mcmc_w_inla_mod$eta,
+                                   kernel = "gaussian")[c(1,2)])
 
 p5 <-ggplot() + 
   geom_line(data=amis_kern, aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data=is_kern, aes(x=x,y=y,color="IS with INLA")) + 
-  #geom_line(data=mcmc_kerns[[1]], aes(x=x,y=y,color="MCMC with INLA")) + 
+  geom_line(data=mcmc_kern, aes(x=x,y=y,color="MCMC with INLA")) + 
   labs(color = "",x="",y="",title=expression(rho)) + 
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
@@ -103,17 +101,15 @@ source("./sem/sem_general_functions.R")
 amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight)
 is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight)
 mcmc_w_inla_mod$ess = running.ESS(mcmc_w_inla_mod$eta,mcmc_w_inla_mod$times)
-
+save(mcmc_w_inla_mod, file = "./sem/sims/sem-mcmc-w-inla.Rdata")
 p6 <- ggplot() + 
-  #geom_hline(yintercept = 10000) + 
   geom_line(data = amis_w_inla_mod$ess, aes(x = time, y = ess, color = "AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$ess, aes(x = time, y = ess, color = "IS with INLA"))+
-  #geom_line(data = mcmc_w_inla_mod$ess, aes(x = time, y = ess, color = "MCMC with INLA")) + 
+  geom_line(data = mcmc_w_inla_mod$ess, aes(x = time, y = ess, color = "MCMC with INLA")) + 
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x))) +
   annotation_logticks() + 
   labs(color = "",x="Runtime (sec)",y="Effective sample size") + 
-  #coord_cartesian(xlim=c(min(amis_w_inla_mod$ess$time),max(mcmc_w_inla_mod$ess$time))) + 
   theme_bw() + 
   theme(legend.position="bottom")
 p6
