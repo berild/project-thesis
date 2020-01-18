@@ -1,5 +1,6 @@
 library(INLA)
 library(spdep)
+library(spData)
 library(spatialreg)
 library(INLABMA)
 library(parallel)
