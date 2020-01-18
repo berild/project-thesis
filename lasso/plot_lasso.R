@@ -35,7 +35,7 @@ lasso.coef
 load(file = "./lasso/sims/lasso-is-w-inla.Rdata")
 load(file = "./lasso/sims/lasso-amis-w-inla.Rdata")
 load(file = "./lasso/sims/lasso-mcmc-w-inla.Rdata")
-
+source("./lasso/lasso_general_function.R")
 width = 7
 height = 7
 
@@ -128,8 +128,8 @@ p6
 ggsave(filename = "lasso_b5_plot.pdf", plot = p6, device = NULL, path = "./lasso/figures/",
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
-amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight/sum(amis_w_inla_mod$weight))
-is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight/sum(is_w_inla_mod$weight))
+amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight)
+is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight)
 
 p7 <- ggplot() + 
   #geom_hline(yintercept = 10000) + 

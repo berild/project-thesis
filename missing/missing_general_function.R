@@ -88,19 +88,23 @@ store.post <- function(marg,margs,j,n.prop){
 running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
   if (anyNA(ws)){
     require(coda)
-    ess = unlist(lapply(sapply(seq(2,nrow(eta)),function(x){
+    ess = sapply(lapply(seq(2,nrow(eta)),function(x){
       effectiveSize(eta[1:x,])
-    }),min))
+    }),min)
+    times = times[-1]
   }else{
     if (norm){
       ws = ws/sum(ws)
     }
-    ess = unlist(sapply(seq(length(ws)),function(x){
+    ess = sapply(seq(length(ws)),function(x){
       sum(ws[1:x])^2/(sum(ws[1:x]^2))
-    }))
+    })
+    rm.ess = !is.na(ess)
+    times = times[rm.ess]
+    ess = ess[rm.ess]
   }
-  ess.df = data.frame(time = c(times[1],rev(times[seq(length(times),1,-step)])),
-                      ess = c(ess[1],rev(ess[seq(length(ess),1,-step)])))
+  ess.df = data.frame(time = c(times[1],times[rev(seq(length(times),100,-step))]),
+                      ess = c(ess[1],ess[rev(seq(length(ess),100,-step))]))
   return(ess.df)
 }
 
@@ -134,3 +138,6 @@ kde2d.weighted <- function (x, y, w, h, n = 25, lims = c(range(x), range(y))) {
   z <- (matrix(rep(w,n), nrow=n, ncol=nx, byrow=TRUE)*matrix(dnorm(ax), n, nx)) %*% t(matrix(dnorm(ay), n, nx))/(sum(w) * h[1] * h[2]) 
   return(list(x = gx, y = gy, z = z))
 }
+
+ggplot() + 
+  geom_line(data = data.frame(x = seq(length(mcmc_w_inla_mod$eta[,1])),y = mcmc_w_inla_mod$eta[,1]),aes(x=x,y=y))

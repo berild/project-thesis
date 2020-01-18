@@ -83,9 +83,6 @@ ggsave(filename = "missing_tau.pdf", plot = p5, device = NULL, path = "./missing
 
 amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight)
 is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight)
-mcmc_w_inla_mod$ess = running.ESS(mcmc_w_inla_mod$eta,mcmc_w_inla_mod$times)
-
-save(mcmc_w_inla_mod, file = "./missing/sims/missing-mcmc-w-inla.Rdata")
 
 p15 <- ggplot() + 
   #geom_hline(yintercept = 10000) + 
@@ -95,7 +92,7 @@ p15 <- ggplot() +
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x))) +
   annotation_logticks() + 
-  labs(color = "",x="Runtime (secs)",y="Effective sample size") + 
+  labs(color = "",x="Runtime (sec)",y="Effective sample size") + 
   #coord_cartesian(xlim=c(min(amis_w_inla_mod$ess$time),max(mcmc_w_inla_mod$ess$time))) + 
   theme_bw() + 
   theme(legend.position="bottom")

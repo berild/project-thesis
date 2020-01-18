@@ -55,19 +55,20 @@ running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
     ess = sapply(seq(2,length(eta)),function(x){
       effectiveSize(eta[1:x])
     })
+    times = times[-1]
   }else{
     if (norm){
       ws = ws/sum(ws)
     }
-    ess = unlist(sapply(seq(length(ws)),function(x){
+    ess = sapply(seq(length(ws)),function(x){
       sum(ws[1:x])^2/(sum(ws[1:x]^2))
-    }))
+    })
     rm.ess = !is.na(ess)
     times = times[rm.ess]
     ess = ess[rm.ess]
   }
-  ess.df = data.frame(time = c(times[1],rev(times[seq(length(times),1,-step)])),
-                      ess = c(ess[1],rev(ess[seq(length(ess),1,-step)])))
+  ess.df = data.frame(time = c(times[1],times[rev(seq(length(times),100,-step))]),
+                      ess = c(ess[1],ess[rev(seq(length(ess),100,-step))]))
   return(ess.df)
 }
 
