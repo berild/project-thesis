@@ -74,9 +74,9 @@ source("./lasso/lasso_general_function.R")
 
 # fitting inla conditioned on samples from is
 source("./lasso/lasso_is_w_inla.R")
-is_w_inla_mod = is.w.inla(data = df, init = list(mu = rep(0,n.beta), cov = 4*stdev.samp), 
-                          prior.beta, dq.beta, rq.beta, fit.inla, N_0 = 800, N = 10000)
-save(is_w_inla_mod, file = "./lasso/sims/lasso-is-w-inla.Rdata")
+#is_w_inla_mod = is.w.inla(data = df, init = list(mu = rep(0,n.beta), cov = 4*stdev.samp), 
+#                          prior.beta, dq.beta, rq.beta, fit.inla, N_0 = 800, N = 10000)
+#save(is_w_inla_mod, file = "./lasso/sims/lasso-is-w-inla.Rdata")
 
 # fitting inla conditioned on samples from amis
 source("./lasso/lasso_amis_w_inla.R")
@@ -85,9 +85,9 @@ amis_w_inla_mod = amis.w.inla(data = df, init = list(mu = rep(0,n.beta), cov = 4
 save(amis_w_inla_mod, file = "./lasso/sims/lasso-amis-w-inla.Rdata")
 
 # fitting inla conditioned on samples from mcmc
-source("./lasso/lasso_mcmc_w_inla.R")
-mcmc_w_inla_mod = mcmc.w.inla(data = df, init = rep(0,ncol(df$x)), 
-                              prior.beta, dq.beta, rq.beta, fit.inla, 
-                              n.samples = 100500, n.burnin = 500, n.thin = 10)
-save(mcmc_w_inla_mod, file = "./lasso/sims/lasso-mcmc-w-inla.Rdata")
+#source("./lasso/lasso_mcmc_w_inla.R")
+#mcmc_w_inla_mod = mcmc.w.inla(data = df, init = rep(0,ncol(df$x)), 
+#                              prior.beta, dq.beta, rq.beta, fit.inla, 
+#                              n.samples = 100500, n.burnin = 500, n.thin = 10)
+#save(mcmc_w_inla_mod, file = "./lasso/sims/lasso-mcmc-w-inla.Rdata")
 
