@@ -26,10 +26,12 @@ width = 7
 height = 7
 
 p1 <- ggplot() + 
+  geom_vline(data=data.frame(x = 61.05, type = "Max. Like."), aes(xintercept = x, linetype = type)) + 
   geom_line(data = amis_w_inla_mod$margs$intercept, aes(x=x,y=y,color="AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$margs$intercept, aes(x=x,y=y,color="IS with INLA")) +
   geom_line(data = mcmc_w_inla_mod$margs$intercept, aes(x=x,y=y,color="MCMC with INLA")) +
-  labs(color = "",x="",y="",title="Intercept") + 
+  labs(color = "",x="",y="",title="Intercept",linetype = "") + 
+  scale_linetype_manual(values = "dashed" )+
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
   coord_cartesian(xlim = c(25,95))
@@ -38,10 +40,12 @@ ggsave(filename = "sem_intercept.pdf", plot = p1, device = NULL, path = "./sem/f
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p2 <- ggplot() + 
+  geom_vline(data=data.frame(x = -1.00, type = "Max. Like."), aes(xintercept = x, linetype = type)) + 
   geom_line(data = amis_w_inla_mod$margs$INC, aes(x=x,y=y,color="AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$margs$INC, aes(x=x,y=y,color="IS with INLA")) +
   geom_line(data = mcmc_w_inla_mod$margs$INC, aes(x=x,y=y,color="MCMC with INLA")) +
-  labs(color = "",x="",y="",title="INC") + 
+  labs(color = "",x="",y="",title="INC",linetype = "") + 
+  scale_linetype_manual(values = "dashed" )+
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
   coord_cartesian(xlim = c(-2.8,1))
@@ -50,10 +54,12 @@ ggsave(filename = "sem_INC.pdf", plot = p2, device = NULL, path = "./sem/figures
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p3 <- ggplot() + 
+  geom_vline(data=data.frame(x = -0.31, type = "Max. Like."), aes(xintercept = x, linetype = type)) + 
   geom_line(data = amis_w_inla_mod$margs$HOVAL, aes(x=x,y=y,color="AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$margs$HOVAL, aes(x=x,y=y,color="IS with INLA")) +
   geom_line(data = mcmc_w_inla_mod$margs$HOVAL, aes(x=x,y=y,color="MCMC with INLA")) +
-  labs(color = "",x="",y="",title="HOVAL") + 
+  labs(color = "",x="",y="",title="HOVAL",linetype = "") + 
+  scale_linetype_manual(values = "dashed" )+
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
   coord_cartesian(xlim = c(-1,0.4))
@@ -62,10 +68,12 @@ ggsave(filename = "sem_HOVAL.pdf", plot = p3, device = NULL, path = "./sem/figur
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p4 <- ggplot() + 
+  geom_vline(data=data.frame(x = 0.01, type = "Max. Like."), aes(xintercept = x, linetype = type)) + 
   geom_line(data = amis_w_inla_mod$margs$tau, aes(x=x,y=y,color="AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$margs$tau, aes(x=x,y=y,color="IS with INLA")) +
   geom_line(data = mcmc_w_inla_mod$margs$tau, aes(x=x,y=y,color="MCMC with INLA")) +
   labs(color = "",x="",y="",title=expression(tau)) + 
+  scale_linetype_manual(values = "dashed" )+
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
   coord_cartesian(xlim = c(0.004,0.02))
@@ -85,10 +93,12 @@ mcmc_kern = as.data.frame(density(x = mcmc_w_inla_mod$eta,
                                    kernel = "gaussian")[c(1,2)])
 
 p5 <-ggplot() + 
+  geom_vline(data=data.frame(x = 0.52, type = "Max. Like."), aes(xintercept = x, linetype = type)) + 
   geom_line(data=amis_kern, aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data=is_kern, aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data=mcmc_kern, aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title=expression(rho)) + 
+  labs(color = "",x="",y="",title=expression(rho),linetype = "") + 
+  scale_linetype_manual(values = "dashed" )+
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5)) + 
   coord_cartesian(xlim = c(0,1))
@@ -100,8 +110,7 @@ source("./sem/sem_general_functions.R")
 
 amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight)
 is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight)
-mcmc_w_inla_mod$ess = running.ESS(mcmc_w_inla_mod$eta,mcmc_w_inla_mod$times)
-save(mcmc_w_inla_mod, file = "./sem/sims/sem-mcmc-w-inla.Rdata")
+
 p6 <- ggplot() + 
   geom_line(data = amis_w_inla_mod$ess, aes(x = time, y = ess, color = "AMIS with INLA")) + 
   geom_line(data = is_w_inla_mod$ess, aes(x = time, y = ess, color = "IS with INLA"))+
