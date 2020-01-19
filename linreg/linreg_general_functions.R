@@ -91,6 +91,9 @@ running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
     ess = unlist(sapply(seq(length(ws)),function(x){
       sum(ws[1:x])^2/(sum(ws[1:x]^2))
     }))
+    rm.ess = !is.na(ess)
+    times = times[rm.ess]
+    ess = ess[rm.ess]
   }
   ess.df = data.frame(time = c(times[1],times[rev(seq(length(times),100,-step))]),
                       ess = c(ess[1],ess[rev(seq(length(ess),100,-step))]))

@@ -84,7 +84,7 @@ running.ESS <- function(eta, times, ws = NA, norm = TRUE,step = 100){
   if (anyNA(ws)){
     require(coda)
     ess = sapply(lapply(seq(2,nrow(eta)),function(x){
-      effectiveSize(eta[2:x,])
+      effectiveSize(eta[1:x,])
     }),min)
     times = times[-1]
   }else{
