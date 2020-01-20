@@ -69,11 +69,13 @@ mcmc_kerns = lapply(seq(ncol(mcmc_w_inla_mod$eta)), function(x){
 
 
 p2 <-ggplot() + 
-  geom_vline(xintercept = lasso.coef[2],linetype = "dashed") + 
+  geom_vline(data = data.frame(x = lasso.coef[2],type = "Lasso Coef."), 
+             aes(xintercept = x,linetype = type)) + 
   geom_line(data = amis_kerns[[1]], aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data= is_kerns[[1]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[1]], aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title="AtBat") + 
+  labs(color = "",x="",y="",title="AtBat",linetype = "") + 
+  scale_linetype_manual(values = "dashed" )+
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p2
@@ -81,11 +83,13 @@ ggsave(filename = "lasso_b1_plot.pdf", plot = p2, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p3 <-ggplot() + 
-  geom_vline(xintercept = lasso.coef[3],linetype = "dashed") + 
+  geom_vline(data = data.frame(x = lasso.coef[3],type = "Lasso Coef."), 
+             aes(xintercept = x,linetype = type)) + 
   geom_line(data = amis_kerns[[2]], aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data= is_kerns[[2]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[2]], aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title="Hits") + 
+  labs(color = "",x="",y="",title="Hits",linetype = "") + 
+  scale_linetype_manual(values = "dashed" )+
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p3
@@ -93,11 +97,13 @@ ggsave(filename = "lasso_b2_plot.pdf", plot = p3, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p4 <-ggplot() + 
-  geom_vline(xintercept = lasso.coef[4],linetype = "dashed") + 
+  geom_vline(data = data.frame(x = lasso.coef[4],type = "Lasso Coef."), 
+             aes(xintercept = x,linetype = type)) + 
   geom_line(data = amis_kerns[[3]], aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data= is_kerns[[3]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[3]], aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title="HmRun") + 
+  labs(color = "",x="",y="",title="HmRun",linetype = "") + 
+  scale_linetype_manual(values = "dashed" )+
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p4
@@ -105,11 +111,13 @@ ggsave(filename = "lasso_b3_plot.pdf", plot = p4, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p5 <-ggplot() + 
-  geom_vline(xintercept = lasso.coef[5],linetype = "dashed") + 
+  geom_vline(data = data.frame(x = lasso.coef[5],type = "Lasso Coef."), 
+             aes(xintercept = x,linetype = type)) +  
   geom_line(data = amis_kerns[[4]], aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data= is_kerns[[4]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[4]], aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title="Runs") + 
+  labs(color = "",x="",y="",title="Runs",linetype = "") + 
+  scale_linetype_manual(values = "dashed" )+
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p5
@@ -117,11 +125,13 @@ ggsave(filename = "lasso_b4_plot.pdf", plot = p5, device = NULL, path = "./lasso
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 
 p6 <-ggplot() + 
-  geom_vline(xintercept = lasso.coef[6],linetype = "dashed") + 
+  geom_vline(data = data.frame(x = lasso.coef[6],type = "Lasso Coef."), 
+             aes(xintercept = x,linetype = type)) +  
   geom_line(data = amis_kerns[[5]], aes(x=x,y=y,color="AMIS with INLA")) +
   geom_line(data= is_kerns[[5]], aes(x=x,y=y,color="IS with INLA")) + 
   geom_line(data= mcmc_kerns[[5]], aes(x=x,y=y,color="MCMC with INLA")) + 
-  labs(color = "",x="",y="",title="RBI") + 
+  labs(color = "",x="",y="",title="RBI",linetype = "") + 
+  scale_linetype_manual(values = "dashed" )+
   theme_bw() + 
   theme(legend.position="bottom",plot.title = element_text(hjust = 0.5))
 p6
