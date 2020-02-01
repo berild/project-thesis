@@ -63,12 +63,12 @@ To apply the combined methods on the Bayesian lasso model, run the <a href="http
  To apply the combined methods on the linear model with missing covariates, run the <a href="https://github.com/berild/project-thesis/blob/master/missing/missing.R">lasso.R</a> script. The functions for each algorithm is presented in <a href="https://github.com/berild/project-thesis/blob/master/missing/missing_amis_w_inla.R">missing_amis_w_inla.R</a>, <a href="https://github.com/berild/project-thesis/blob/master/missing/missing_is_w_inla.R">missing_is_w_inla.R</a>, and <a href="https://github.com/berild/project-thesis/blob/master/missing/missing_mcmc_w_inla.R">missing_mcmc_w_inla.R</a>. General functions used in the algorithms, plotting, and evaluation is given in <a href="https://github.com/berild/project-thesis/blob/master/missing/missing_general_functions.R">missing_general_functions.R</a>. Result of our simulation is given with <a href="https://git-lfs.github.com/">git-lfs</a> in <a href="https://github.com/berild/project-thesis/tree/master/missing/sims">sims</a> and use <a href="https://github.com/berild/project-thesis/blob/master/missing/plot_missing.R">plot_missing.R</a> to replicate our plots.   
   
   <h4>Result</h4>
-  | Parameter |  MCMC w/INLA  |   IS w/INLA   |  AMIS w/INLA  |
+| Parameter |  MCMC w/INLA  |   IS w/INLA   |  AMIS w/INLA  |
 |:---------:|:-------------:|:-------------:|:-------------:|
-| &beta;_0 |  43.69(62.20) |  44.21(62.27) |  42.87(62.02  |
-| &beta;_1 |   4.86(2.19)  |   4.84(2.19)  |   4.89(2.19)  |
-| &beta;_2 |  29.37(17.87) |  29.40(17.90) |  29.49(17.84) |
-| &beta;_3 |  49.61(23.12) |  49.49(23.24) |  49.83(23.14) |
+| &beta;0 |  43.69(62.20) |  44.21(62.27) |  42.87(62.02  |
+| &beta;1 |   4.86(2.19)  |   4.84(2.19)  |   4.89(2.19)  |
+| &beta;2 |  29.37(17.87) |  29.40(17.90) |  29.49(17.84) |
+| &beta;3 |  49.61(23.12) |  49.49(23.24) |  49.83(23.14) |
 |   &tau;  | 0.001(0.0005) | 0.001(0.0005) | 0.001(0.0005) |
   
 <img src="https://i.imgur.com/R1CtyWh.png"
