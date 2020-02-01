@@ -96,6 +96,7 @@ $RECYCLE.BIN/
 **/*.bbl
 **/*.blg
 **/*.pdf
+**/*.png
 
 # Windows shortcuts
 *.lnk
