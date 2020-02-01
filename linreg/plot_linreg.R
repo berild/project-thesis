@@ -63,7 +63,6 @@ ggsave(filename = "linreg_contour_plot.pdf", plot = p3, device = NULL, path = ".
 amis_w_inla_mod$ess = running.ESS(amis_w_inla_mod$eta, amis_w_inla_mod$times,ws =  amis_w_inla_mod$weight)
 is_w_inla_mod$ess = running.ESS(is_w_inla_mod$eta, is_w_inla_mod$times,ws =  is_w_inla_mod$weight)
 mcmc_w_inla_mod$ess = running.ESS(mcmc_w_inla_mod$eta, mcmc_w_inla_mod$times)
-save(mcmc_w_inla_mod, file="./linreg/sims/linreg-mcmc-w-inla.Rdata")
 
 p4 <- ggplot() + 
   geom_line(data = is_w_inla_mod$ess, aes(x = time, y = ess, color = "IS with INLA"))+

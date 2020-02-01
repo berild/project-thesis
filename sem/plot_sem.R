@@ -118,7 +118,7 @@ p6 <- ggplot() +
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x))) +
   annotation_logticks() + 
-  labs(color = "",x="Runtime (sec)",y="Effective sample size") + 
+  labs(color = "",x="Runtime (sec)",y="Effective sample size",title = "") + 
   theme_bw() + 
   theme(legend.position="bottom")
 p6
@@ -127,6 +127,6 @@ ggsave(filename = "sem_ess_plot.pdf", plot = p6, device = NULL, path = "./sem/fi
 
 ptot <- ggarrange(p1, p2, p3, p4, p5, p6, ncol=2, nrow=3, common.legend = TRUE, legend="bottom")
 ptot
-ggsave(filename = "sem_tot.pdf", plot = ptot, device = NULL, path = "./sem/figures/",
+ggsave(filename = "sem_tot.png", plot = ptot, device = png(), path = "./sem/figures/",
        scale = 1, width = width, height = height, units = "in", dpi=5000)
 

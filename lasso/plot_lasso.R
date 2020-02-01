@@ -149,7 +149,7 @@ p7 <- ggplot() +
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x))) +
   annotation_logticks() + 
-  labs(color = "",x="Runtime (sec)",y="Effective sample size") + 
+  labs(color = "",x="Runtime (sec)",y="Effective sample size",title="") + 
   coord_cartesian(xlim=c(min(amis_w_inla_mod$ess$time),max(mcmc_w_inla_mod$ess$time))) + 
   theme_bw() + 
   theme(legend.position="bottom")
