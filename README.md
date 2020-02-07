@@ -24,7 +24,7 @@ The aim is to assess these methods on a series of applications with simulated an
 <h3 id="examples">Examples</h3>
 
 <details>
-  <summary id="blm" style ="cursor: pointer; font-size: 1.5em;">Bivariate Linear</summary>
+  <summary id="blm" style ="cursor: pointer; font-size: 1.5em;">Bivariate Linear (click to view)</summary>
   
 To apply the combined methods on the bivariate linear model, run the <a href="https://github.com/berild/project-thesis/blob/master/linreg/linreg.R">linreg.R</a> script. The functions for each algorithm is presented in <a href="https://github.com/berild/project-thesis/blob/master/linreg/linreg_amis_w_inla.R">linreg_amis_w_inla.R</a>, <a href="https://github.com/berild/project-thesis/blob/master/linreg/linreg_is_w_inla.R">linreg_is_w_inla.R</a>, and <a href="https://github.com/berild/project-thesis/blob/master/linreg/linreg_mcmc_w_inla.R">linreg_mcmc_w_inla.R</a>. General functions used in the algorithms, plotting, and evaluation is given in <a href="https://github.com/berild/project-thesis/blob/master/linreg/linreg_general_functions.R">linreg_general_functions.R</a>. Result of our simulation is given with <a href="https://git-lfs.github.com/">git-lfs</a> in <a href="https://github.com/berild/project-thesis/tree/master/linreg/sims">sims</a> and use <a href="https://github.com/berild/project-thesis/blob/master/linreg/plot_linreg.R">plot_linreg.R</a> to replicate our plots.
 
@@ -36,7 +36,7 @@ To apply the combined methods on the bivariate linear model, run the <a href="ht
 </details>
 
 <details>
-  <summary id="bl" style ="cursor: pointer; font-size: 1.5em;">Bayesian Lasso</summary>
+  <summary id="bl" style ="cursor: pointer; font-size: 1.5em;">Bayesian Lasso (click to view)</summary>
   
 To apply the combined methods on the Bayesian lasso model, run the <a href="https://github.com/berild/project-thesis/blob/master/lasso/lasso.R">lasso.R</a> script. The functions for each algorithm is presented in <a href="https://github.com/berild/project-thesis/blob/master/lasso/lasso_amis_w_inla.R">lasso_amis_w_inla.R</a>, <a href="https://github.com/berild/project-thesis/blob/master/lasso/lasso_is_w_inla.R">lasso_is_w_inla.R</a>, and <a href="https://github.com/berild/project-thesis/blob/master/lasso/lasso_mcmc_w_inla.R">lasso_mcmc_w_inla.R</a>. General functions used in the algorithms, plotting, and evaluation is given in <a href="https://github.com/berild/project-thesis/blob/master/lasso/lasso_general_functions.R">lasso_general_functions.R</a>. Result of our simulation is given with <a href="https://git-lfs.github.com/">git-lfs</a> in <a href="https://github.com/berild/project-thesis/tree/master/lasso/sims">sims</a> and use <a href="https://github.com/berild/project-thesis/blob/master/lasso/plot_lasso.R">plot_lasso.R</a> to replicate our plots.
   
@@ -58,7 +58,7 @@ To apply the combined methods on the Bayesian lasso model, run the <a href="http
 
 
 <details>
-  <summary id="mc" style ="cursor: pointer; font-size: 1.5em;">Missing Covariates</summary>
+  <summary id="mc" style ="cursor: pointer; font-size: 1.5em;">Missing Covariates (click to view)</summary>
     
  To apply the combined methods on the linear model with missing covariates, run the <a href="https://github.com/berild/project-thesis/blob/master/missing/missing.R">lasso.R</a> script. The functions for each algorithm is presented in <a href="https://github.com/berild/project-thesis/blob/master/missing/missing_amis_w_inla.R">missing_amis_w_inla.R</a>, <a href="https://github.com/berild/project-thesis/blob/master/missing/missing_is_w_inla.R">missing_is_w_inla.R</a>, and <a href="https://github.com/berild/project-thesis/blob/master/missing/missing_mcmc_w_inla.R">missing_mcmc_w_inla.R</a>. General functions used in the algorithms, plotting, and evaluation is given in <a href="https://github.com/berild/project-thesis/blob/master/missing/missing_general_functions.R">missing_general_functions.R</a>. Result of our simulation is given with <a href="https://git-lfs.github.com/">git-lfs</a> in <a href="https://github.com/berild/project-thesis/tree/master/missing/sims">sims</a> and use <a href="https://github.com/berild/project-thesis/blob/master/missing/plot_missing.R">plot_missing.R</a> to replicate our plots.   
   
@@ -83,7 +83,7 @@ To apply the combined methods on the Bayesian lasso model, run the <a href="http
 
 
 <details>
-  <summary id="sem" style ="cursor: pointer; font-size: 1.5em;">Spatial Econometric Model</summary>
+  <summary id="sem" style ="cursor: pointer; font-size: 1.5em;">Spatial Econometric Model (click to view)</summary>
   
    To apply the combined methods on the spatial lag model, run the <a href="https://github.com/berild/project-thesis/blob/master/sem/sem.R">sem.R</a> script. The functions for each algorithm is presented in <a href="https://github.com/berild/project-thesis/blob/master/sem/sem_amis_w_inla.R">sem_amis_w_inla.R</a>, <a href="https://github.com/berild/project-thesis/blob/master/sem/sem_is_w_inla.R">sem_is_w_inla.R</a>, and <a href="https://github.com/berild/project-thesis/blob/master/sem/sem_mcmc_w_inla.R">sem_mcmc_w_inla.R</a>. General functions used in the algorithms, plotting, and evaluation is given in <a href="https://github.com/berild/project-thesis/blob/master/sem/sem_general_functions.R">sem_general_functions.R</a>. Result of our simulation is given with <a href="https://git-lfs.github.com/">git-lfs</a> in <a href="https://github.com/berild/project-thesis/tree/master/sem/sims">sims</a> and use <a href="https://github.com/berild/project-thesis/blob/master/sem/plot_sem.R">plot_sem.R</a> to replicate our plots.   
 
