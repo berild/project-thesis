@@ -106,7 +106,7 @@ To apply the combined methods on the Bayesian lasso model, run the <a href="http
 
 <ul>
   <li>We will create a R package for the methodologies which will be linked here later.</li>
-  <li>We will apply the AMIS with INLA method in a master thesis and the repository will be linked here later.</li>
+  <li>We will apply the AMIS with INLA method in a master thesis and the repository will be linked <a href="https://github.com/berild/master-thesis-code">here</a>.</li>
   <li>We will link to the project thesis paper, when the grading is completed.</li>
 </ul>
 
