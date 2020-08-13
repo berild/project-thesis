@@ -1,4 +1,4 @@
-<h2>The Integrated Nested Laplace Approximation within Monte Carlo methods</h2>
+<h2>Adaptive Multiple Importance Sampling with the Integrated Nested Laplace Approximation</h2>
 
 ------
 
